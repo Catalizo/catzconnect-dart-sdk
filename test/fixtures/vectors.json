@@ -1,0 +1,2573 @@
+{
+  "generated_by": "sdk/dart/catzconnect/tool/gen_vectors.mjs with the TypeScript SDK 1.5.0",
+  "keys": {
+    "client_private": "BwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwcHBwc=",
+    "client_public": "E75P6uryBMf9M1j8nAByGIHRdCeBKCJ+xnTzf3/pe20=",
+    "server_private": "CQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQkJCQk=",
+    "server_public": "V9tLNZ8jrl4Ubk4lEgVnBHIlBjSMFQwUdT0Mkz0E1CE=",
+    "derived_key": "7vT+qmWN1o7NGJYQKRS0a+nqlltTvXveIM/uvb0XrCQ=",
+    "api_key": "  live_test_key\n"
+  },
+  "fixed_nonce": "AQIDBAUGBwgJCgsM",
+  "fixed_ts": 1760745600000,
+  "base_url_env": "https://api.test/",
+  "sends": [
+    {
+      "name": "email_otp",
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "noreply@example.com",
+        "payload": {
+          "to": "user@example.com",
+          "otp": "012345"
+        }
+      },
+      "payload_json": "{\"message_type\":\"Verification\",\"channel\":\"Email\",\"template\":\"Otp\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"otp\":\"012345\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+0ldtynHTUrIZ/grNgqzfzGTjEM8ce1V8kNOwsICH4PeLWDrm0qwAw32vJ3LBpURIP6m2qJOcOwka21AHP1ZhsQJhPGdQlqgF39pGZbN7EdnlY+UvythCX2fVfzXgvDoWW1BNsJt80Iu2a21X+txcbtjXaSdXzpJznOAZbTEYYgKafQMpKTPoAHT704zPtSCMcBnLJX3Nvk2lLS/A=",
+      "plaintext": "{\"message_type\":\"Verification\",\"channel\":\"Email\",\"template\":\"Otp\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"otp\":\"012345\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-email_otp",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "email_custom_unicode",
+      "input": {
+        "channel": "Email",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "noreply@example.com",
+        "payload": {
+          "to": "user@example.com",
+          "subject": "Héllo \"quoted\" \\ back/slash",
+          "body": "Line 1\nLine 2\tTab <b>&amp;</b> € 😀 \u0001 ✓"
+        }
+      },
+      "payload_json": "{\"message_type\":\"Transactional\",\"channel\":\"Email\",\"template\":\"Custom\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"subject\":\"Héllo \\\"quoted\\\" \\\\ back/slash\",\"body\":\"Line 1\\nLine 2\\tTab <b>&amp;</b> € 😀 \\u0001 ✓\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+2gsh1iXzUuZt5g7wupTmyEjHLM8wXm0c8U8QgKCS2M+yAH7Gptw0lzizRxN1eVENXp2nsbasTz1ehglKZwtUkB4ZMEvEwvhla44WdL83HfnUXtFK/uAjBw6QAnU05E5a7wQdoZcw3KuHVlleo6xdS4WeBHoWzs4TpUrGBAhBGl8yNBosQDq9UcSzkwjt67ur6QH4qCTgcfd1t1gfA7IejAU6CnoYplnVDGVh0BLRtC5yiIe5P5kCZRml09gW4H/xhAh1+ABIOod/C0O6m4Rl7fYWR1f2J+cA8BAGGaTlHDRgKkf8e2UvRRMN3MSn0SWT6KgK96U2629p+ag==",
+      "plaintext": "{\"message_type\":\"Transactional\",\"channel\":\"Email\",\"template\":\"Custom\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"subject\":\"Héllo \\\"quoted\\\" \\\\ back/slash\",\"body\":\"Line 1\\nLine 2\\tTab <b>&amp;</b> € 😀 \\u0001 ✓\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-email_custom_unicode",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "email_panel_template",
+      "input": {
+        "channel": "Email",
+        "type": "Transactional",
+        "template": "welcome",
+        "identity": "noreply@example.com",
+        "payload": {
+          "to": "user@example.com",
+          "data": {
+            "name": "Ada",
+            "plan": "Pro"
+          }
+        }
+      },
+      "payload_json": "{\"message_type\":\"Transactional\",\"channel\":\"Email\",\"template\":\"welcome\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"data\":{\"name\":\"Ada\",\"plan\":\"Pro\"}}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+2gsh1iXzUuZt5g7wupTmyEjHLM8wXm0c8U8QgKCS2M+yAH7Gptw0lzizRxN1qRFxAp2mrY6VYwlaqmE+Ez448H8pND+YlogxjxpiEI9Dbdz5auFDwtgaX2OkYhRo/BYGJ5BpxadErI6qYmlXn5RkD8GSfGsT96pylex9NTEYL9vTOVdJdCqZRQyz+vDco46nkB3MtFntVJMh3xFKbvcixC1z+x5Uh6QfF4JHtoOszE4Q0v8NM",
+      "plaintext": "{\"message_type\":\"Transactional\",\"channel\":\"Email\",\"template\":\"welcome\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"data\":{\"name\":\"Ada\",\"plan\":\"Pro\"},\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-email_panel_template",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "whatsapp_otp",
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "919578456444",
+        "payload": {
+          "to": "+91 98765 43210",
+          "otp": "A1B2C3"
+        }
+      },
+      "payload_json": "{\"message_type\":\"Verification\",\"channel\":\"WhatsApp\",\"template\":\"Otp\",\"identity\":\"919578456444\",\"to\":\"+91 98765 43210\",\"otp\":\"A1B2C3\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+0ldtynHTUrIZ/grNgqzfzGTjEM8ce1V8kJuksPT6bYbCAR/awogw01iiHm90nA39XuCbiY+Aezly7n0+Umc08HNkaVaN45lUsssnIYJGJbzRW4R22rRuVlb4NiQ1qQtfJlU8rJJ40O7+UwxjL9ncT1zbJV8Sz4pzxK0UeXksdgqafR85PSrceQrzgGKP4Qs9RK6zXZcSj",
+      "plaintext": "{\"message_type\":\"Verification\",\"channel\":\"WhatsApp\",\"template\":\"Otp\",\"identity\":\"919578456444\",\"to\":\"+91 98765 43210\",\"otp\":\"A1B2C3\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-whatsapp_otp",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "whatsapp_custom",
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "919578456444",
+        "payload": {
+          "to": "+91 98765 43210",
+          "subject": "Order shipped",
+          "body": "Your order arrives Friday."
+        }
+      },
+      "payload_json": "{\"message_type\":\"Transactional\",\"channel\":\"WhatsApp\",\"template\":\"Custom\",\"identity\":\"919578456444\",\"to\":\"+91 98765 43210\",\"subject\":\"Order shipped\",\"body\":\"Your order arrives Friday.\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+2gsh1iXzUuZt5g7wupTmyEjHLM8wXm0c8U9YlKDmpULDSSfjmswQpyiWSipo/GxJgvXe6LuRYhxCmkl6Dz55qXMoZQq1x61UtvsnJdImfL3lY+UvythCXh78LnwFyQdLOhEs6Oo1rbeOUik/orVBC4CfRWam19du5OgFABwxZ0vSNW9wdFa5JDzTmxwgv/qv2WTU8F3kOZ40oggDcqLjzUgivjsZummZrBDYnW+Z7CffiQLkd9kzLSDLrwwOxv2ZyVTiHLf0aaaUY",
+      "plaintext": "{\"message_type\":\"Transactional\",\"channel\":\"WhatsApp\",\"template\":\"Custom\",\"identity\":\"919578456444\",\"to\":\"+91 98765 43210\",\"subject\":\"Order shipped\",\"body\":\"Your order arrives Friday.\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-whatsapp_custom",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "push_token_full",
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "my-firebase-project",
+        "payload": {
+          "to": "fcm-token-123",
+          "body": "You have mail",
+          "title": "Inbox",
+          "data": {
+            "order": "42",
+            "kind": "mail"
+          },
+          "image": "https://example.com/i.png",
+          "link": "https://example.com/inbox",
+          "device_key": "DEVICEKEYBASE64="
+        }
+      },
+      "payload_json": "{\"message_type\":\"Notification\",\"channel\":\"Push\",\"template\":\"Notification\",\"identity\":\"my-firebase-project\",\"to\":\"fcm-token-123\",\"body\":\"You have mail\",\"title\":\"Inbox\",\"data\":{\"order\":\"42\",\"kind\":\"mail\"},\"image\":\"https://example.com/i.png\",\"link\":\"https://example.com/inbox\",\"device_key\":\"DEVICEKEYBASE64=\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+sn91ynHTUrIZ/grNgqzfzGTjEM8ce1V8kIfQ+IW/2M7THBqSophUhmHPRsJBpSFZKq2W6KOYUiR7tn1+I1YN3UZEBWrYtq01874+ZINzYfnYEqVD38UnBjqoYy1doTMadxxIkfNMwKqGbyAi55RkD9mqPAsT9s+ekb1JADwpMl/3OHpJdVuhERHqo+0VgrsL3ST4hR3VNcZ41lUeV89zuSQirhcp2lHAtVTg/AbgjXeLsV+JMrxDZBWM38hjiRLYhBh/09speInp1f6uC9UQ7IdGfVA539IUwABzDcSRSV0FTzugSyxOVAIN5IXVRuQ70ITJ8iwHpftdb9i6UCSN4GYd/KVxLgC19MtrDUcvmYo/p2bXOIOiGctdApKj+7WHcX+oSuteSJpfL5/uuyEpjzIuVt7EcLGycCWpXaaBqs70tZwY=",
+      "plaintext": "{\"message_type\":\"Notification\",\"channel\":\"Push\",\"template\":\"Notification\",\"identity\":\"my-firebase-project\",\"to\":\"fcm-token-123\",\"body\":\"You have mail\",\"title\":\"Inbox\",\"data\":{\"order\":\"42\",\"kind\":\"mail\"},\"image\":\"https://example.com/i.png\",\"link\":\"https://example.com/inbox\",\"device_key\":\"DEVICEKEYBASE64=\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-push_token_full",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "push_external_user",
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "my-firebase-project",
+        "payload": {
+          "body": "Hi",
+          "external_user_id": "user-77"
+        }
+      },
+      "payload_json": "{\"message_type\":\"Notification\",\"channel\":\"Push\",\"template\":\"Notification\",\"identity\":\"my-firebase-project\",\"body\":\"Hi\",\"external_user_id\":\"user-77\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+sn91ynHTUrIZ/grNgqzfzGTjEM8ce1V8kIfQ+IW/2M7THBqSophUhmHPRsJBpSFZKq2W6KOYUiR7tn1+I1YN3UZEBWrYtq01874+ZINzYfnYEqVD38UnBjqoY3VcuD8bBhjdgKpB5KrfCnEjkpll+4XaOCbmu9ZzxOAdbCw4EgKeNW9wLCegKHDnyrlBuub2pG2FpVSTxymBMeeO2vE5yNrqDsakT",
+      "plaintext": "{\"message_type\":\"Notification\",\"channel\":\"Push\",\"template\":\"Notification\",\"identity\":\"my-firebase-project\",\"body\":\"Hi\",\"external_user_id\":\"user-77\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-push_external_user",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "sms_otp",
+      "input": {
+        "channel": "SMS",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "482913"
+        }
+      },
+      "payload_json": "{\"message_type\":\"Verification\",\"channel\":\"SMS\",\"template\":\"Otp\",\"identity\":\"\",\"to\":\"+14155550100\",\"otp\":\"482913\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+0ldtynHTUrIZ/grNgqzfzGTjEM8ce1V8kIswea2H4ZaXPG7ilswRmgGu8io8/DRJKrGGgNeAO0hD11BnBmYNxB9IBS6V041Uvs8jMc42bOXdWtEvtthCXmL4Ihgl5VMjZ0AwrMo1sef+BzQ+89wURpDWWoConnj8OJiugYlxhrJ86VA==",
+      "plaintext": "{\"message_type\":\"Verification\",\"channel\":\"SMS\",\"template\":\"Otp\",\"identity\":\"\",\"to\":\"+14155550100\",\"otp\":\"482913\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-sms_otp",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "sms_custom_india",
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": " custom ",
+        "identity": "",
+        "payload": {
+          "to": "+91 98765-43210",
+          "body": "Your code is ready",
+          "gateway": "msg91-main",
+          "sender": "CATZIN",
+          "dlt_template_id": "1207161234567890123"
+        }
+      },
+      "payload_json": "{\"message_type\":\"Transactional\",\"channel\":\"SMS\",\"template\":\" custom \",\"identity\":\"\",\"to\":\"+91 98765-43210\",\"body\":\"Your code is ready\",\"gateway\":\"msg91-main\",\"sender\":\"CATZIN\",\"dlt_template_id\":\"1207161234567890123\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+2gsh1iXzUuZt5g7wupTmyEjHLM8wXm0c8U9IAGm/2M7THBqSophUhmHPR3pxoUkRMpSTsbasTz1ehglKZwtUkB8oPQuAv8Fo4rcTNYoSTLG1B9guuphuFjqoY3VcuD8bBhiZmfc57LKDSnBrjtBVT8WSPAsTrs9mqbhdfDwULjbLCBJlGS+ddTGeqvEt4/+73TzQrR2NNVr4VrizhqtKjXwC6qJwp2zRzFmB4NbgpG/r0RL0d8U3NSX0mr0C1FOs6DAyusZwCczQpcvTLox97eoCEAVEq69wuDQSFUucCNzgV+JmlLtdp7Rk=",
+      "plaintext": "{\"message_type\":\"Transactional\",\"channel\":\"SMS\",\"template\":\" custom \",\"identity\":\"\",\"to\":\"+91 98765-43210\",\"body\":\"Your code is ready\",\"gateway\":\"msg91-main\",\"sender\":\"CATZIN\",\"dlt_template_id\":\"1207161234567890123\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-sms_custom_india",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "sms_panel_template",
+      "input": {
+        "channel": "SMS",
+        "type": "Promotional",
+        "template": "sale_alert",
+        "identity": "ignored",
+        "payload": {
+          "to": "+447700900123",
+          "otp": "   ",
+          "body": "",
+          "data": {
+            "pct": "20"
+          }
+        }
+      },
+      "payload_json": "{\"message_type\":\"Promotional\",\"channel\":\"SMS\",\"template\":\"sale_alert\",\"identity\":\"ignored\",\"to\":\"+447700900123\",\"data\":{\"pct\":\"20\"}}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+ygsZ2lWneopx3gf9upXb4EDfEOM5QzUdVPNJvZW+udK3SB7WwokN+mDqSkppCQFxGunDsbasTz1ehglKZwtUkB4FEDvsytwQ4qt+ILZ+ROXBA7wiqpBqMnLYLjQtoWsafxQtoKoYgbb/VjRiw5QcRtnjHWZK0s4T6LUQYWUgcgaCfR85PB3OS3hZaNIWtTelin2Yz2/0=",
+      "plaintext": "{\"message_type\":\"Promotional\",\"channel\":\"SMS\",\"template\":\"sale_alert\",\"identity\":\"ignored\",\"to\":\"+447700900123\",\"data\":{\"pct\":\"20\"},\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-sms_panel_template",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "voice_otp",
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "otp",
+        "identity": "",
+        "payload": {
+          "to": "+1 (415) 555-0100",
+          "otp": " 482913 ",
+          "data": {
+            "language": "en-US",
+            "voice": "female",
+            "repeat": " 2 "
+          }
+        }
+      },
+      "payload_json": "{\"message_type\":\"Verification\",\"channel\":\"Voice\",\"template\":\"Otp\",\"identity\":\"\",\"to\":\"+14155550100\",\"otp\":\"482913\",\"data\":{\"language\":\"en-US\",\"voice\":\"female\",\"repeat\":\"2\"}}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+0ldtynHTUrIZ/grNgqzfzGTjEM8ce1V8kJ+4kKij4PeLWDrm0qwAw32vJ3LBpURIP6m2qJOcOwka21AHPmds8UYcBWrZr41Qrs8jJd42aK2tW9x3y4FqXlqQOhwpzR9fZiF1tacg6bfXN21brqVJU9WKOWdzl9NDmTyEKQl5f2PnMEtxFWKxVQG+o+0V2rvn8WzQ4EXtVN81jiUmN/I2jAV35wdh7gnEpRyQtWuEwNU2DiqoXUv71kmuh14U26A==",
+      "plaintext": "{\"message_type\":\"Verification\",\"channel\":\"Voice\",\"template\":\"Otp\",\"identity\":\"\",\"to\":\"+14155550100\",\"otp\":\"482913\",\"data\":{\"language\":\"en-US\",\"voice\":\"female\",\"repeat\":\"2\"},\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-voice_otp",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "voice_custom_provider",
+      "input": {
+        "channel": "voice",
+        "type": "Notification",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+919876543210",
+          "body": "  Your table is ready.  ",
+          "provider": " Exotel India "
+        }
+      },
+      "payload_json": "{\"message_type\":\"Notification\",\"channel\":\"Voice\",\"template\":\"Custom\",\"identity\":\"\",\"to\":\"+919876543210\",\"body\":\"Your table is ready.\",\"provider\":\"Exotel India\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+sn91ynHTUrIZ/grNgqzfzGTjEM8ce1V8kJ+4kKij4PeLWDrm0qwAw32vJ3LxoUkRMpSbiY+Aezly7n0+Umc08B8QBFPti6EIxv8zFeoqdLm9H6Q6ttgaXzulexhpwVL2U0Q0pfN05I6qWkEmqtVBA8HzFWcrl4cykbBtMCw4LjbLqD5ELH6YQZGCg9wZ4oKntWHNjVG5ZJch1wVOfuM6xCxESLsG28e+bt8H1UVvcm4a5",
+      "plaintext": "{\"message_type\":\"Notification\",\"channel\":\"Voice\",\"template\":\"Custom\",\"identity\":\"\",\"to\":\"+919876543210\",\"body\":\"Your table is ready.\",\"provider\":\"Exotel India\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-voice_custom_provider",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "voice_panel_template",
+      "input": {
+        "channel": "Voice",
+        "type": "Transactional",
+        "template": "appointment",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "data": {
+            "time": "3 pm"
+          }
+        }
+      },
+      "payload_json": "{\"message_type\":\"Transactional\",\"channel\":\"Voice\",\"template\":\"appointment\",\"identity\":\"\",\"to\":\"+14155550100\",\"data\":{\"time\":\"3 pm\"}}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+2gsh1iXzUuZt5g7wupTmyEjHLM8wXm0c8U9ciIC6/M+yAH7Gptw0lzizRxN18UUBMoWq6LOwU3xDj1FKJ3plqTJxaQq5i8Ew48pLeeJ+AKm9F7gqooRqEnLYYkxouF5CahkVyKsgyIqqUwxi550VMtnjHWZK0s4T6LUQYWUgcgaCfR85PB9Z8eNvOF8/XSOSD8YqIXvo=",
+      "plaintext": "{\"message_type\":\"Transactional\",\"channel\":\"Voice\",\"template\":\"appointment\",\"identity\":\"\",\"to\":\"+14155550100\",\"data\":{\"time\":\"3 pm\"},\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-voice_panel_template",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "email_otp_language",
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "noreply@example.com",
+        "payload": {
+          "to": "user@example.com",
+          "otp": "012345"
+        },
+        "language": "de-DE"
+      },
+      "payload_json": "{\"message_type\":\"Verification\",\"channel\":\"Email\",\"template\":\"Otp\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"otp\":\"012345\",\"language\":\"de\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+0ldtynHTUrIZ/grNgqzfzGTjEM8ce1V8kNOwsICH4PeLWDrm0qwAw32vJ3LBpURIP6m2qJOcOwka21AHP1ZhsQJhPGdQlqgF39pGZbN7EdnlY+UvythCX2fVfzXgvDoWW1BNsJt80Iu2a21X+txcbtjXaSdXzpJznOB5JABtc1vfKVcRdHq8SASyw7UVgvbyvG2ZtUG9fJc9xxBg/Vri78BEL4GWFFjAyYFH9",
+      "plaintext": "{\"message_type\":\"Verification\",\"channel\":\"Email\",\"template\":\"Otp\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"otp\":\"012345\",\"language\":\"de\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-email_otp_language",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "whatsapp_otp_language",
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "919578456444",
+        "payload": {
+          "to": "+91 98765 43210",
+          "otp": "A1B2C3"
+        },
+        "language": "ar"
+      },
+      "payload_json": "{\"message_type\":\"Verification\",\"channel\":\"WhatsApp\",\"template\":\"Otp\",\"identity\":\"919578456444\",\"to\":\"+91 98765 43210\",\"otp\":\"A1B2C3\",\"language\":\"ar\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+0ldtynHTUrIZ/grNgqzfzGTjEM8ce1V8kJuksPT6bYbCAR/awogw01iiHm90nA39XuCbiY+Aezly7n0+Umc08HNkaVaN45lUsssnIYJGJbzRW4R22rRuVlb4NiQ1qQtfJlU8rJJ40O7+UwxjL9ncT1zbJV8Sr8NCsbxNPC14TlfHdVdJdDrkSFz/zqFdtuL6vG2FpVWkS9LZFDbPTfJoOS9jfXELSBA==",
+      "plaintext": "{\"message_type\":\"Verification\",\"channel\":\"WhatsApp\",\"template\":\"Otp\",\"identity\":\"919578456444\",\"to\":\"+91 98765 43210\",\"otp\":\"A1B2C3\",\"language\":\"ar\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-whatsapp_otp_language",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "sms_otp_language",
+      "input": {
+        "channel": "SMS",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "482913"
+        },
+        "language": " HI_in "
+      },
+      "payload_json": "{\"message_type\":\"Verification\",\"channel\":\"SMS\",\"template\":\"Otp\",\"identity\":\"\",\"to\":\"+14155550100\",\"otp\":\"482913\",\"language\":\"hi\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+0ldtynHTUrIZ/grNgqzfzGTjEM8ce1V8kIswea2H4ZaXPG7ilswRmgGu8io8/DRJKrGGgNeAO0hD11BnBmYNxB9IBS6V041Uvs8jMc42bOXdWtEvtthCXmL4Ihgl5VMjZyB5nb8k6KKqUwxjirhcNtnGYWdz2poj7LUYdWEwZh6CfCtHDnoa5vvzHkORaQ1DmqMY=",
+      "plaintext": "{\"message_type\":\"Verification\",\"channel\":\"SMS\",\"template\":\"Otp\",\"identity\":\"\",\"to\":\"+14155550100\",\"otp\":\"482913\",\"language\":\"hi\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-sms_otp_language",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "voice_otp_language_data_override",
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "482913",
+          "data": {
+            "language": "en-US"
+          }
+        },
+        "language": "ja"
+      },
+      "payload_json": "{\"message_type\":\"Verification\",\"channel\":\"Voice\",\"template\":\"Otp\",\"identity\":\"\",\"to\":\"+14155550100\",\"otp\":\"482913\",\"data\":{\"language\":\"en-US\"},\"language\":\"ja\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+0ldtynHTUrIZ/grNgqzfzGTjEM8ce1V8kJ+4kKij4PeLWDrm0qwAw32vJ3LBpURIP6m2qJOcOwka21AHPmds8UYcBWrZr41Qrs8jJd42aK2tW9x3y4FqXlqQOhwpzR9fZiF1tacg6bfXN21brqVJU9WKOWdzl9NDmTyEKE1AL2/HBEIseHa8SFyyu/0V2rv/qCWtoUm9fIst0wlWfuM6xRs5T449Pq1vN19E0CfCyT2k=",
+      "plaintext": "{\"message_type\":\"Verification\",\"channel\":\"Voice\",\"template\":\"Otp\",\"identity\":\"\",\"to\":\"+14155550100\",\"otp\":\"482913\",\"data\":{\"language\":\"en-US\"},\"language\":\"ja\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-voice_otp_language_data_override",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    },
+    {
+      "name": "email_custom_language",
+      "input": {
+        "channel": "Email",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "noreply@example.com",
+        "payload": {
+          "to": "user@example.com",
+          "subject": "s",
+          "body": "b"
+        },
+        "language": "en"
+      },
+      "payload_json": "{\"message_type\":\"Transactional\",\"channel\":\"Email\",\"template\":\"Custom\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"subject\":\"s\",\"body\":\"b\",\"language\":\"en\"}",
+      "url": "https://api.test/sdk/send",
+      "authorization": "Bearer live_test_key",
+      "content_type": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd477eVD+yCvVfspB80Xq+2gsh1iXzUuZt5g7wupTmyEjHLM8wXm0c8U8QgKCS2M+yAH7Gptw0lzizRxN1eVENXp2nsbasTz1ehglKZwtUkB4ZMEvEwvhla44WdL83HfnUXtFK/uAjBw6QAnU05E5a7wQdoZcw3KuHVlleo6xdS4WeBHoWzs4TpaVAETB5G0+mNTdwdWOYSQW+q+RI76+67EXM8C3tDN4sy1l+ev8ixDFj7wdh8hnQvCrL66ta/FCYa5t1960+ENGY=",
+      "plaintext": "{\"message_type\":\"Transactional\",\"channel\":\"Email\",\"template\":\"Custom\",\"identity\":\"noreply@example.com\",\"to\":\"user@example.com\",\"subject\":\"s\",\"body\":\"b\",\"language\":\"en\",\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "Queued",
+        "data": {
+          "message_id": "m-email_custom_language",
+          "segments": 1,
+          "encoding": "gsm7"
+        }
+      }
+    }
+  ],
+  "send_error": {
+    "message": "Failed to send Verification.SMS.Otp: HTTP 403: {\"success\":false,\"message\":\"Your plan does not include SMS\",\"code\":\"plan_required\"}",
+    "status": 403,
+    "code": "plan_required",
+    "body": "{\"success\":false,\"message\":\"Your plan does not include SMS\",\"code\":\"plan_required\"}"
+  },
+  "validation": [
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "a@b.co",
+          "otp": "123456"
+        }
+      },
+      "error": "Missing 'identity'"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "otp": "123456"
+        }
+      },
+      "error": "Missing 'to' in payload"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co"
+        }
+      },
+      "error": "Missing 'otp' in payload"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "not-an-email",
+          "otp": "123456"
+        }
+      },
+      "error": "Invalid email: not-an-email"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co",
+          "otp": "12a456"
+        }
+      },
+      "error": "'otp' must contain only digits"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co",
+          "otp": "12345"
+        }
+      },
+      "error": "'otp' must be exactly 6 digits"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co",
+          "otp": ""
+        }
+      },
+      "error": "'otp' must contain only digits"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co",
+          "body": "b"
+        }
+      },
+      "error": "Missing 'subject' in payload"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co",
+          "subject": "s"
+        }
+      },
+      "error": "Missing 'body' in payload"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co"
+        }
+      },
+      "error": "Unsupported combination: Notification.Email.Notification"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Custom",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co"
+        }
+      },
+      "error": "Unsupported combination: Verification.Email.Custom"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Transactional",
+        "template": "welcome",
+        "identity": "x",
+        "payload": {}
+      },
+      "error": "Missing 'to' in payload"
+    },
+    {
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "user@example.com",
+          "otp": "1"
+        }
+      },
+      "error": "WhatsApp messages go to phone numbers, not email addresses: user@example.com"
+    },
+    {
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "12345",
+          "otp": "1"
+        }
+      },
+      "error": "Invalid phone number: 12345"
+    },
+    {
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "+1 415 555 0100",
+          "otp": "1234567890123456"
+        }
+      },
+      "error": "'otp' must be up to 15 letters or digits"
+    },
+    {
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "+1 415 555 0100",
+          "otp": "12-34"
+        }
+      },
+      "error": "'otp' must be up to 15 letters or digits"
+    },
+    {
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "x",
+        "payload": {
+          "to": "+1 415 555 0100",
+          "body": ""
+        }
+      },
+      "error": "Missing 'body' in payload"
+    },
+    {
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "x",
+        "payload": {
+          "to": "+1 415 555 0100",
+          "subject": "s",
+          "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "error": "WhatsApp messages are limited to 4096 characters"
+    },
+    {
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "x",
+        "payload": {
+          "to": "abc",
+          "body": "x"
+        }
+      },
+      "error": "Invalid phone number: abc"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "",
+        "payload": {
+          "to": "t",
+          "body": "b"
+        }
+      },
+      "error": "Missing 'identity' — the Firebase project ID"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "p",
+        "payload": {
+          "to": "t",
+          "body": "b",
+          "external_user_id": "u"
+        }
+      },
+      "error": "Give either 'to' (one device token) or 'external_user_id' (a user's registered devices), not both"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "p",
+        "payload": {
+          "body": "b"
+        }
+      },
+      "error": "Missing 'to' in payload — the device's FCM registration token — or 'external_user_id' for a user's registered devices"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "p",
+        "payload": {
+          "to": "a@b.co",
+          "body": "b"
+        }
+      },
+      "error": "'to' must be an FCM registration token, not an email address"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "p",
+        "payload": {
+          "body": "b",
+          "external_user_id": "uuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuu"
+        }
+      },
+      "error": "'external_user_id' must be a string of up to 128 characters"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "p",
+        "payload": {
+          "body": "b",
+          "device_key": "k",
+          "external_user_id": "u"
+        }
+      },
+      "error": "'device_key' cannot be used with 'external_user_id' — each registered device's own key is used"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "p",
+        "payload": {
+          "to": "t"
+        }
+      },
+      "error": "Missing 'body' in payload"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "p",
+        "payload": {
+          "to": "t",
+          "body": "b",
+          "image": "http://x/i.png"
+        }
+      },
+      "error": "'image' must be an https:// URL"
+    },
+    {
+      "input": {
+        "channel": "Push",
+        "type": "Notification",
+        "template": "Notification",
+        "identity": "p",
+        "payload": {
+          "to": "t",
+          "body": "b",
+          "link": "ftp://x"
+        }
+      },
+      "error": "'link' must be an https:// URL"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {}
+      },
+      "error": "Missing 'to' in payload — the recipient's number in E.164, e.g. +919876543210"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "0044 7700 900123",
+          "otp": "1"
+        }
+      },
+      "error": "'0044 7700 900123' is not an E.164 phone number — use + and the country code, e.g. +919876543210"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Notification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "otp": "1"
+        }
+      },
+      "error": "SMS supports type Verification (template Otp), Transactional or Promotional — not Notification"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "b",
+          "sender": "CATZ"
+        }
+      },
+      "error": "'sender' can only be used together with 'gateway'"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "b",
+          "gateway": "g",
+          "sender": "X"
+        }
+      },
+      "error": "'sender' must be an E.164 number or a 2–11 character sender ID"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "b",
+          "dlt_template_id": "12ab"
+        }
+      },
+      "error": "'dlt_template_id' must be the numeric DLT template ID"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "  ",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123"
+        }
+      },
+      "error": "Missing 'template' — Otp, Custom, or the name of an SMS template"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "otp",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "otp": "1"
+        }
+      },
+      "error": "template Otp goes with type Verification"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Verification",
+        "template": "OTP",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "otp": " "
+        }
+      },
+      "error": "Missing 'otp' in payload"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "otp": "12345678901234567"
+        }
+      },
+      "error": "'otp' must be up to 15 letters or digits"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Verification",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "b"
+        }
+      },
+      "error": "type Verification goes with template Otp; use Transactional for Custom"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "  "
+        }
+      },
+      "error": "Missing 'body' in payload"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "bell \u0007"
+        }
+      },
+      "error": "The message contains control characters"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+        }
+      },
+      "error": "The message is 11 segments long; the limit is 10 (1530 characters in GSM7)"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€"
+        }
+      },
+      "error": "The message is 11 segments long; the limit is 10 (1530 characters in GSM7)"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Promotional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "body": "üüüüüüüüüü😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀"
+        }
+      },
+      "error": "The message is 11 segments long; the limit is 10 (670 characters in UCS2)"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Transactional",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+919876543210",
+          "body": "hello"
+        }
+      },
+      "error": "India (+91) requires a DLT template ID: pass 'dlt_template_id' for Custom messages"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "otp": "1"
+        }
+      },
+      "error": "Missing 'to' in payload — the number to call in E.164, e.g. +14155550100"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "12345",
+          "otp": "1"
+        }
+      },
+      "error": "'12345' is not an E.164 phone number — use + and the country code, e.g. +919876543210"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "1",
+          "provider": "  "
+        }
+      },
+      "error": "'provider' must be a phone provider's id or label"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "1",
+          "data": {
+            "repeat": "4"
+          }
+        }
+      },
+      "error": "'data.repeat' must be a whole number from 1 to 3"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "1",
+          "data": {
+            "repeat": "1.5"
+          }
+        }
+      },
+      "error": "'data.repeat' must be a whole number from 1 to 3"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "1",
+          "data": {
+            "language": "english"
+          }
+        }
+      },
+      "error": "'data.language' must be a language tag such as en-US"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "1",
+          "data": {
+            "voice": " female"
+          }
+        }
+      },
+      "error": "'data.voice' must be female, male or a provider voice name"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100"
+        }
+      },
+      "error": "Missing 'template' — Otp, Custom, or the name of a Voice template"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100"
+        }
+      },
+      "error": "Missing 'otp' in payload"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "12 34"
+        }
+      },
+      "error": "'otp' must be up to 15 letters or digits"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Notification",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "body": " "
+        }
+      },
+      "error": "Missing 'body' in payload — the text to speak"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Notification",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "body": "a\u0000b"
+        }
+      },
+      "error": "The text to speak contains control characters"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Notification",
+        "template": "Custom",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "body": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé"
+        }
+      },
+      "error": "The text to speak is 1001 characters; the limit is 1000"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co",
+          "otp": "123456"
+        },
+        "language": "fr"
+      },
+      "error": "Unsupported 'language' \"fr\": use one of en, de, ja, ar, hi (or a BCP-47 tag such as de-DE)"
+    },
+    {
+      "input": {
+        "channel": "SMS",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+447700900123",
+          "otp": "1"
+        },
+        "language": "fr-FR"
+      },
+      "error": "Unsupported 'language' \"fr-FR\": use one of en, de, ja, ar, hi (or a BCP-47 tag such as de-DE)"
+    },
+    {
+      "input": {
+        "channel": "Voice",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "+14155550100",
+          "otp": "1"
+        },
+        "language": ""
+      },
+      "error": "Unsupported 'language' \"\": use one of en, de, ja, ar, hi (or a BCP-47 tag such as de-DE)"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co",
+          "otp": "123456"
+        },
+        "language": "de--DE"
+      },
+      "error": "Unsupported 'language' \"de--DE\": use one of en, de, ja, ar, hi (or a BCP-47 tag such as de-DE)"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "a@b.co",
+          "otp": "123456"
+        },
+        "language": "english"
+      },
+      "error": "Unsupported 'language' \"english\": use one of en, de, ja, ar, hi (or a BCP-47 tag such as de-DE)"
+    },
+    {
+      "input": {
+        "channel": "Email",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "",
+        "payload": {
+          "to": "a@b.co",
+          "otp": "123456"
+        },
+        "language": "xx"
+      },
+      "error": "Unsupported 'language' \"xx\": use one of en, de, ja, ar, hi (or a BCP-47 tag such as de-DE)"
+    },
+    {
+      "input": {
+        "channel": "WhatsApp",
+        "type": "Verification",
+        "template": "Otp",
+        "identity": "x",
+        "payload": {
+          "to": "+1 415 555 0100",
+          "otp": "1"
+        },
+        "language": "hi-IN"
+      },
+      "error": null
+    }
+  ],
+  "sms": {
+    "analyse": [
+      {
+        "text": "",
+        "result": {
+          "encoding": "gsm7",
+          "units": 0,
+          "segments": 1,
+          "chars": 0
+        }
+      },
+      {
+        "text": "Hello",
+        "result": {
+          "encoding": "gsm7",
+          "units": 5,
+          "segments": 1,
+          "chars": 5
+        }
+      },
+      {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "result": {
+          "encoding": "gsm7",
+          "units": 160,
+          "segments": 1,
+          "chars": 160
+        }
+      },
+      {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "result": {
+          "encoding": "gsm7",
+          "units": 161,
+          "segments": 2,
+          "chars": 161
+        }
+      },
+      {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "result": {
+          "encoding": "gsm7",
+          "units": 306,
+          "segments": 2,
+          "chars": 306
+        }
+      },
+      {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "result": {
+          "encoding": "gsm7",
+          "units": 307,
+          "segments": 3,
+          "chars": 307
+        }
+      },
+      {
+        "text": "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€",
+        "result": {
+          "encoding": "gsm7",
+          "units": 160,
+          "segments": 1,
+          "chars": 80
+        }
+      },
+      {
+        "text": "€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€€",
+        "result": {
+          "encoding": "gsm7",
+          "units": 162,
+          "segments": 2,
+          "chars": 81
+        }
+      },
+      {
+        "text": "[curly]{}^~|\\",
+        "result": {
+          "encoding": "gsm7",
+          "units": 21,
+          "segments": 1,
+          "chars": 13
+        }
+      },
+      {
+        "text": "Ünïcödé",
+        "result": {
+          "encoding": "ucs2",
+          "units": 7,
+          "segments": 1,
+          "chars": 7
+        }
+      },
+      {
+        "text": "😀",
+        "result": {
+          "encoding": "ucs2",
+          "units": 2,
+          "segments": 1,
+          "chars": 1
+        }
+      },
+      {
+        "text": "a😀b",
+        "result": {
+          "encoding": "ucs2",
+          "units": 4,
+          "segments": 1,
+          "chars": 3
+        }
+      },
+      {
+        "text": "ÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇÇ",
+        "result": {
+          "encoding": "gsm7",
+          "units": 70,
+          "segments": 1,
+          "chars": 70
+        }
+      },
+      {
+        "text": "çççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççç",
+        "result": {
+          "encoding": "ucs2",
+          "units": 70,
+          "segments": 1,
+          "chars": 70
+        }
+      },
+      {
+        "text": "ççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççççç",
+        "result": {
+          "encoding": "ucs2",
+          "units": 71,
+          "segments": 2,
+          "chars": 71
+        }
+      },
+      {
+        "text": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "result": {
+          "encoding": "ucs2",
+          "units": 70,
+          "segments": 1,
+          "chars": 35
+        }
+      },
+      {
+        "text": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "result": {
+          "encoding": "ucs2",
+          "units": 72,
+          "segments": 2,
+          "chars": 36
+        }
+      },
+      {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx€",
+        "result": {
+          "encoding": "gsm7",
+          "units": 154,
+          "segments": 1,
+          "chars": 153
+        }
+      },
+      {
+        "text": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx€",
+        "result": {
+          "encoding": "gsm7",
+          "units": 155,
+          "segments": 1,
+          "chars": 154
+        }
+      },
+      {
+        "text": "\n\r\f @£$¥",
+        "result": {
+          "encoding": "gsm7",
+          "units": 9,
+          "segments": 1,
+          "chars": 8
+        }
+      },
+      {
+        "text": "Ελληνικά ΔΦΓΛΩΠΨΣΘΞ",
+        "result": {
+          "encoding": "ucs2",
+          "units": 19,
+          "segments": 1,
+          "chars": 19
+        }
+      }
+    ],
+    "e164": [
+      {
+        "input": "+919876543210",
+        "result": "+919876543210"
+      },
+      {
+        "input": " +91 98765-43210 ",
+        "result": "+919876543210"
+      },
+      {
+        "input": "+1 (415) 555.0100",
+        "result": "+14155550100"
+      },
+      {
+        "input": "919876543210",
+        "result": null
+      },
+      {
+        "input": "+0123456789",
+        "result": null
+      },
+      {
+        "input": "+1234567",
+        "result": null
+      },
+      {
+        "input": "+12345678",
+        "result": "+12345678"
+      },
+      {
+        "input": "+123456789012345",
+        "result": "+123456789012345"
+      },
+      {
+        "input": "+1234567890123456",
+        "result": null
+      },
+      {
+        "input": "",
+        "result": null
+      },
+      {
+        "input": "+91 98765 4321a",
+        "result": null
+      }
+    ],
+    "sender": [
+      {
+        "input": "CATZ",
+        "result": true
+      },
+      {
+        "input": "CATZIN",
+        "result": true
+      },
+      {
+        "input": "C",
+        "result": false
+      },
+      {
+        "input": "CATZCONNECT",
+        "result": true
+      },
+      {
+        "input": "CATZCONNECTX",
+        "result": false
+      },
+      {
+        "input": "12345",
+        "result": false
+      },
+      {
+        "input": "+14155550100",
+        "result": true
+      },
+      {
+        "input": "+1 415 555 0100",
+        "result": false
+      },
+      {
+        "input": " CATZ",
+        "result": false
+      },
+      {
+        "input": "CATZ ",
+        "result": false
+      },
+      {
+        "input": "CA TZ",
+        "result": true
+      },
+      {
+        "input": "CATZ-IN",
+        "result": false
+      },
+      {
+        "input": "Ab",
+        "result": true
+      }
+    ],
+    "dlt": [
+      {
+        "input": "123456",
+        "result": true
+      },
+      {
+        "input": "12345",
+        "result": false
+      },
+      {
+        "input": "111111111111111111111111111111",
+        "result": true
+      },
+      {
+        "input": "1111111111111111111111111111111",
+        "result": false
+      },
+      {
+        "input": "12a456",
+        "result": false
+      },
+      {
+        "input": "",
+        "result": false
+      }
+    ]
+  },
+  "voice": {
+    "language": [
+      {
+        "input": "en-US",
+        "result": true
+      },
+      {
+        "input": "hi-IN",
+        "result": true
+      },
+      {
+        "input": "es-419",
+        "result": true
+      },
+      {
+        "input": "fr",
+        "result": true
+      },
+      {
+        "input": "zh-Hant-TW",
+        "result": true
+      },
+      {
+        "input": "english",
+        "result": false
+      },
+      {
+        "input": "e",
+        "result": false
+      },
+      {
+        "input": "en_US",
+        "result": false
+      },
+      {
+        "input": "en-",
+        "result": false
+      },
+      {
+        "input": "en-US-x-a",
+        "result": false
+      }
+    ],
+    "name": [
+      {
+        "input": "female",
+        "result": true
+      },
+      {
+        "input": "male",
+        "result": true
+      },
+      {
+        "input": "Polly.Joanna",
+        "result": true
+      },
+      {
+        "input": "en-US-Wavenet-F",
+        "result": true
+      },
+      {
+        "input": "a:b",
+        "result": true
+      },
+      {
+        "input": " female",
+        "result": false
+      },
+      {
+        "input": "female ",
+        "result": false
+      },
+      {
+        "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "result": true
+      },
+      {
+        "input": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+        "result": false
+      },
+      {
+        "input": "bad!",
+        "result": false
+      },
+      {
+        "input": "",
+        "result": false
+      }
+    ],
+    "text": [
+      {
+        "input": " hello ",
+        "result": "hello",
+        "error": null
+      },
+      {
+        "input": "",
+        "result": null,
+        "error": "The text to speak is empty"
+      },
+      {
+        "input": "  ",
+        "result": null,
+        "error": "The text to speak is empty"
+      },
+      {
+        "input": "a\u0007b",
+        "result": null,
+        "error": "The text to speak contains control characters"
+      },
+      {
+        "input": "tab\tok\nnew",
+        "result": "tab\tok\nnew",
+        "error": null
+      },
+      {
+        "input": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "result": "éééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "error": null
+      },
+      {
+        "input": "ééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééééé",
+        "result": null,
+        "error": "The text to speak is 1001 characters; the limit is 1000"
+      },
+      {
+        "input": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "result": "😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀😀",
+        "error": null
+      }
+    ],
+    "repeat": [
+      {
+        "input": "1",
+        "result": 1,
+        "error": null
+      },
+      {
+        "input": " 3 ",
+        "result": 3,
+        "error": null
+      },
+      {
+        "input": "0",
+        "result": null,
+        "error": "'data.repeat' must be a whole number from 1 to 3"
+      },
+      {
+        "input": "4",
+        "result": null,
+        "error": "'data.repeat' must be a whole number from 1 to 3"
+      },
+      {
+        "input": "2.0",
+        "result": null,
+        "error": "'data.repeat' must be a whole number from 1 to 3"
+      },
+      {
+        "input": "abc",
+        "result": null,
+        "error": "'data.repeat' must be a whole number from 1 to 3"
+      },
+      {
+        "input": "",
+        "result": null,
+        "error": "'data.repeat' must be a whole number from 1 to 3"
+      },
+      {
+        "input": "03",
+        "result": 3,
+        "error": null
+      }
+    ]
+  },
+  "calls": {
+    "create_payloads": [
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "bob"
+          ]
+        },
+        "payload_json": "{\"mode\":\"video\",\"from\":\"alice\",\"to\":[\"bob\"]}"
+      },
+      {
+        "input": {
+          "mode": "audio",
+          "from": "alice",
+          "to": [
+            "bob",
+            "carol"
+          ],
+          "engine": " catz ",
+          "ring": false,
+          "metadata": {
+            "order": "A-1042",
+            "n": 7,
+            "nested": {
+              "ok": true
+            }
+          },
+          "maxParticipants": 4
+        },
+        "payload_json": "{\"mode\":\"audio\",\"from\":\"alice\",\"to\":[\"bob\",\"carol\"],\"engine\":\"catz\",\"ring\":false,\"metadata\":{\"order\":\"A-1042\",\"n\":7,\"nested\":{\"ok\":true}},\"max_participants\":4}"
+      }
+    ],
+    "create_errors": [
+      {
+        "input": {
+          "mode": "video",
+          "from": "",
+          "to": [
+            "bob"
+          ]
+        },
+        "error": "Missing 'from'"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+          "to": [
+            "bob"
+          ]
+        },
+        "error": "'from' must be at most 128 characters"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "al\u0001ice",
+          "to": [
+            "bob"
+          ]
+        },
+        "error": "'from' contains control characters"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": []
+        },
+        "error": "'to' must list at least one user id"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "u0",
+            "u1",
+            "u2",
+            "u3",
+            "u4",
+            "u5",
+            "u6",
+            "u7",
+            "u8",
+            "u9",
+            "u10",
+            "u11",
+            "u12",
+            "u13",
+            "u14",
+            "u15",
+            "u16",
+            "u17",
+            "u18",
+            "u19",
+            "u20",
+            "u21",
+            "u22",
+            "u23",
+            "u24",
+            "u25",
+            "u26",
+            "u27",
+            "u28",
+            "u29",
+            "u30",
+            "u31",
+            "u32",
+            "u33",
+            "u34",
+            "u35",
+            "u36",
+            "u37",
+            "u38",
+            "u39",
+            "u40",
+            "u41",
+            "u42",
+            "u43",
+            "u44",
+            "u45",
+            "u46",
+            "u47",
+            "u48",
+            "u49"
+          ]
+        },
+        "error": "'to' can list at most 49 user ids"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "alice"
+          ]
+        },
+        "error": "'to' must not include the caller ('from')"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "bob",
+            "bob"
+          ]
+        },
+        "error": "'to' lists 'bob' twice"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            " "
+          ]
+        },
+        "error": "Missing 'to' entry"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "bob"
+          ],
+          "engine": "  "
+        },
+        "error": "'engine' must be \"auto\", \"catz\" or a provider id or label"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "bob"
+          ],
+          "metadata": {
+            "big": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+          }
+        },
+        "error": "'metadata' must be at most 4 KB as JSON"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "bob"
+          ],
+          "maxParticipants": 1
+        },
+        "error": "'maxParticipants' must be a whole number from 2 to 50"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "bob"
+          ],
+          "maxParticipants": 51
+        },
+        "error": "'maxParticipants' must be a whole number from 2 to 50"
+      },
+      {
+        "input": {
+          "mode": "video",
+          "from": "alice",
+          "to": [
+            "bob",
+            "carol"
+          ],
+          "maxParticipants": 2
+        },
+        "error": "3 participants do not fit 'maxParticipants' 2"
+      }
+    ],
+    "token_payloads": [
+      {
+        "user_id": "alice",
+        "ttl": null,
+        "payload_json": "{\"user_id\":\"alice\"}",
+        "error": null
+      },
+      {
+        "user_id": "alice",
+        "ttl": 600,
+        "payload_json": "{\"user_id\":\"alice\",\"ttl_seconds\":600}",
+        "error": null
+      },
+      {
+        "user_id": "alice",
+        "ttl": 59,
+        "payload_json": null,
+        "error": "'ttlSeconds' must be a whole number from 60 to 86400"
+      },
+      {
+        "user_id": "alice",
+        "ttl": 86401,
+        "payload_json": null,
+        "error": "'ttlSeconds' must be a whole number from 60 to 86400"
+      },
+      {
+        "user_id": "",
+        "ttl": 600,
+        "payload_json": null,
+        "error": "Missing 'userId'"
+      }
+    ],
+    "create_request": {
+      "url": "https://api.test/sdk/calls/create",
+      "authorization": "Bearer live_test_key",
+      "accept": "application/json",
+      "nonce": "AQIDBAUGBwgJCgsM",
+      "ciphertext": "Fyd45aCDTLHFg1bxvRU0SK+EgsZ22CeVrJ5/jrhgqzfkHnuQBoAQmAckXaMuKD+1feL/R/ahqQYt1CzRxN1+QERZ6ijsM+AUzBD1kFqByJIyB4VGFPUksxR7pMeHYNLZfz4G+QW/1QeEnLIInRRoGMbBk1MrZtkoO6rS2wDx5VpKtj+fCZOi7MPnOB9JFiNZ1uLbHp0WCqteWX3mpFN2rv/qCWtoUm9fIst0wlWfuM6xRl0zITVU0lIRnU1gG38FdO8=",
+      "plaintext": "{\"mode\":\"audio\",\"from\":\"alice\",\"to\":[\"bob\",\"carol\"],\"engine\":\"catz\",\"ring\":false,\"metadata\":{\"order\":\"A-1042\",\"n\":7,\"nested\":{\"ok\":true}},\"max_participants\":4,\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "call": {
+          "id": "c1",
+          "engine": "catz",
+          "provider": null,
+          "mode": "video",
+          "status": "ringing",
+          "room": "c1",
+          "participants": [
+            {
+              "user_id": "alice",
+              "role": "caller",
+              "state": "joined",
+              "joined_at": "2026-10-18T00:00:01Z",
+              "seconds": 0,
+              "connection": "direct"
+            },
+            {
+              "user_id": "bob",
+              "role": "callee",
+              "state": "ringing"
+            }
+          ],
+          "created_at": "2026-10-18T00:00:00Z",
+          "metadata": {
+            "order": "A-1042"
+          }
+        }
+      },
+      "result": {
+        "id": "c1",
+        "engine": "catz",
+        "provider": null,
+        "mode": "video",
+        "status": "ringing",
+        "room": "c1",
+        "participants": [
+          {
+            "user_id": "alice",
+            "role": "caller",
+            "state": "joined",
+            "joined_at": "2026-10-18T00:00:01Z",
+            "seconds": 0,
+            "connection": "direct"
+          },
+          {
+            "user_id": "bob",
+            "role": "callee",
+            "state": "ringing"
+          }
+        ],
+        "created_at": "2026-10-18T00:00:00Z",
+        "metadata": {
+          "order": "A-1042"
+        }
+      }
+    },
+    "token_request": {
+      "url": "https://api.test/sdk/calls/token",
+      "plaintext": "{\"user_id\":\"alice\",\"ttl_seconds\":600,\"ts\":1760745600000}",
+      "response": {
+        "success": true,
+        "message": "ok",
+        "data": {
+          "nonce": "ZGVmZ2hpamtsbW5v",
+          "ciphertext": "yBvxbGWzmKiVuJpmAG8dpnSkYB+E3eCMqW/cyocqniKegVvk5InmMYJaMJGcbBPeW8Ctg+cWSxtJWqKq+8PGdN4YBM1JRKSD0i/cpYX/Tyc="
+        }
+      },
+      "result": {
+        "token": "ct1.a.b",
+        "expires_at": 99,
+        "ws_url": "wss://x/rtc/v1/ws"
+      }
+    },
+    "get_request": {
+      "url": "https://api.test/sdk/calls/get",
+      "plaintext": "{\"call_id\":\"c1\",\"ts\":1760745600000}",
+      "response": {
+        "nonce": "yMnKy8zNzs/Q0dLT",
+        "ciphertext": "lFElIHqMJyRgbOkPZTinKseZejyv6Endbsrw6tGiBIRhQkPwrYaLcBhH4IxvVKNrx3w9c8/eG05uJCs3rgj31sFhhsNVkmSwmDWGPhXAhb5bb/g8TRuFh3FuVsWlU/5phLZS5HvxtuqJkP1g8srR2vmlRAKUdrDe3s5GAgYRSFGm9taXm9eock1x1gmm7+eI1osFyI6H2Lgzia5KYY+HpJKEW0NlBVbNGlJGf7KnEZ45OlYafEyZIdmqHinmnKpGne7SQUdHT7kWcN6aE/QBVmHN0d0nHYtAUiQSYMsinXcSMifmni6vsv4yNojSjgtS7lup+pH8rit65htyFkgzVuhKM/IiFVMBTTsE/Sf9yWtZF/b+/2wP52mepFc5LW3G5D2SpSLQq7f34Kxz7HDxgi4f/49xOSQeVN7U+j2euI5oSRVdAYAQvt1OT3vOavoLhPztbdztC6+Jab0kcbNPrVK/kz4xih0i08+rBsWXJJVhEc9dKm1aC0XWSAmuZJidRO/QsNb/inw9V1U="
+      },
+      "result_id": "c1",
+      "result_status": "ringing"
+    },
+    "end_request": {
+      "result": {
+        "success": true,
+        "message": "Call ended"
+      },
+      "plaintext": "{\"call_id\":\"c1\",\"reason\":\"done\",\"ts\":1760745600000}"
+    },
+    "errors": [
+      {
+        "status": 402,
+        "body": "{\"success\":false,\"message\":\"Your plan does not include calls\",\"code\":\"plan_required\"}",
+        "error": {
+          "name": "CatzApiError",
+          "message": "Your plan does not include calls",
+          "status": 402,
+          "code": "plan_required",
+          "body": "{\"success\":false,\"message\":\"Your plan does not include calls\",\"code\":\"plan_required\"}"
+        }
+      },
+      {
+        "status": 200,
+        "body": "{\"success\":false,\"message\":\"Call not found\",\"code\":\"not_found\"}",
+        "error": {
+          "name": "CatzApiError",
+          "message": "Call not found",
+          "status": 200,
+          "code": "not_found",
+          "body": "{\"success\":false,\"message\":\"Call not found\",\"code\":\"not_found\"}"
+        }
+      },
+      {
+        "status": 500,
+        "body": "upstream exploded",
+        "error": {
+          "name": "CatzApiError",
+          "message": "HTTP 500: upstream exploded",
+          "status": 500,
+          "code": null,
+          "body": "upstream exploded"
+        }
+      },
+      {
+        "status": 200,
+        "body": "<html>oops</html>",
+        "error": {
+          "name": "CatzApiError",
+          "message": "The server sent a response that is not JSON: <html>oops</html>",
+          "status": 200,
+          "code": null,
+          "body": "<html>oops</html>"
+        }
+      }
+    ]
+  },
+  "webhook": [
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": true
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=09DE0A2C82F6A7819CEBB00D6E8DDEF92ABFC89D660775FAD658136197D7D7B5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": true
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": " t = 1760745600 , v1 = 09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5 ",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": true
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=0000000000000000000000000000000000000000000000000000000000000000,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": true
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745901,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745300,
+      "tolerance": 300,
+      "result": true
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760755600,
+      "tolerance": 0,
+      "result": true
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745601,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=abc,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_test_secret",
+      "header": "",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "",
+      "header": "t=1760745600,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "whsec_other",
+      "header": "t=1760745600,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}} ",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=09de0a2c82f6a7819cebb00d6e8ddef92abfc89d660775fad658136197d7d7b5",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": false
+    },
+    {
+      "body": "",
+      "secret": "whsec_test_secret",
+      "header": "t=1760745600,v1=04cf36e34f402a195b7dcb438d42882967c278f58c4bd694cf57a0d8d095370d",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": true
+    },
+    {
+      "body": "{\"event\":\"sms.delivered\",\"data\":{\"message_id\":\"m1\",\"note\":\"ünï\"}}",
+      "secret": "kkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkkk",
+      "header": "t=1760745600,v1=6e821a972ee4a664c36a4f0d350c7bcbc810097e314fb18bdf099619cf5c102b",
+      "now": 1760745600,
+      "tolerance": 300,
+      "result": true
+    }
+  ],
+  "user_hash": [
+    {
+      "external_user_id": "user-1",
+      "secret": "pis_secret",
+      "hash": "5cbf9cf31b61d7e19c46616d6dfc6c84b0798a9cf6a26285ae43e6fa9fc6795a"
+    },
+    {
+      "external_user_id": "",
+      "secret": "pis_secret",
+      "hash": "e28a7b1e543dc5ad3430a307ab39e9e66ca7d0636d96ef4298a67461f6427d95"
+    },
+    {
+      "external_user_id": "ünïcödé 😀",
+      "secret": "pis_ü",
+      "hash": "d3cbf09cb8ee917f43988a9f6171635ffbfc69eca61a2d4729be6230ba84bbd8"
+    },
+    {
+      "external_user_id": "u",
+      "secret": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx",
+      "hash": "71c4149589d1f1b78971dbd2b8de53d2d5213695e45c146636d025993473834d"
+    }
+  ],
+  "user_hash_error": "computeUserHash: identity secret is required",
+  "push": {
+    "device_keys": {
+      "publicKey": "xE5CklF3Hsdhl8eh+OoomhjKPden4QK6fMhN9rVcvho=",
+      "privateKey": "TzcNYUbekZzBzkcol3ddmmwoNMUJ4I4U78srUhiPlK4="
+    },
+    "other_device_keys": {
+      "publicKey": "kOaL6HjHyuJgI08k+XRXlNFgXVoTwO7JcWleRFV7WAA=",
+      "privateKey": "rj8kj4D/BN4gqC/hK9NVGIcWjjctI5kyzoEtCZLTQDg="
+    },
+    "cases": [
+      {
+        "data": {
+          "catz_v": "1",
+          "catz_sealed": "HmTxe/6nfV3ss6WjQAiSDnNaJG5UP4CvJhorI+rfNz6lTAIhx1FD4b7eFey3ZzhKVnk2GpuV3aicf9YpHypn2As5sBfDkC5i5pYbOW2rjyQxcZAd+mxP+LdK4nvj78sXrbYS1J8ioHJm3NR1YzJ3kqBRrgC2xHSN1eNuXs/5bQDvgArchqez276Upb+VKeQxiq7Ji+RLtf4mgPK0as1c7zIE+Q==",
+          "catz_id": "p-1"
+        },
+        "opened": {
+          "title": "Inbox",
+          "body": "You have mail 📬",
+          "data": {
+            "order": "42"
+          },
+          "image": "https://example.com/i.png"
+        }
+      },
+      {
+        "data": {
+          "catz_v": "1",
+          "catz_sealed": "ZbEiWVpwkYWOwjpJRPgPtp1JV7tFtWwlDdm00voEzR7Q6OMFtC+lohMeby5bvJnki/62ExBHBVIT4oBgoQ=="
+        },
+        "opened": {
+          "body": "Hi",
+          "data": {}
+        }
+      }
+    ],
+    "is_sealed": [
+      {
+        "data": {
+          "catz_v": "1",
+          "catz_sealed": "HmTxe/6nfV3ss6WjQAiSDnNaJG5UP4CvJhorI+rfNz6lTAIhx1FD4b7eFey3ZzhKVnk2GpuV3aicf9YpHypn2As5sBfDkC5i5pYbOW2rjyQxcZAd+mxP+LdK4nvj78sXrbYS1J8ioHJm3NR1YzJ3kqBRrgC2xHSN1eNuXs/5bQDvgArchqez276Upb+VKeQxiq7Ji+RLtf4mgPK0as1c7zIE+Q==",
+          "catz_id": "p-1"
+        },
+        "result": true
+      },
+      {
+        "data": {
+          "catz_v": "2",
+          "catz_sealed": "HmTxe/6nfV3ss6WjQAiSDnNaJG5UP4CvJhorI+rfNz6lTAIhx1FD4b7eFey3ZzhKVnk2GpuV3aicf9YpHypn2As5sBfDkC5i5pYbOW2rjyQxcZAd+mxP+LdK4nvj78sXrbYS1J8ioHJm3NR1YzJ3kqBRrgC2xHSN1eNuXs/5bQDvgArchqez276Upb+VKeQxiq7Ji+RLtf4mgPK0as1c7zIE+Q=="
+        },
+        "result": false
+      },
+      {
+        "data": {
+          "catz_sealed": "HmTxe/6nfV3ss6WjQAiSDnNaJG5UP4CvJhorI+rfNz6lTAIhx1FD4b7eFey3ZzhKVnk2GpuV3aicf9YpHypn2As5sBfDkC5i5pYbOW2rjyQxcZAd+mxP+LdK4nvj78sXrbYS1J8ioHJm3NR1YzJ3kqBRrgC2xHSN1eNuXs/5bQDvgArchqez276Upb+VKeQxiq7Ji+RLtf4mgPK0as1c7zIE+Q=="
+        },
+        "result": false
+      },
+      {
+        "data": {
+          "catz_v": "1"
+        },
+        "result": false
+      },
+      {
+        "data": {},
+        "result": false
+      }
+    ]
+  }
+}

@@ -1,0 +1,32 @@
+name: catzconnect
+description: >-
+  The Catz Connect SDK for Flutter: encrypted send() for Email, WhatsApp,
+  Push, SMS and Voice, the calls server API, the voice and video call client
+  (peer-to-peer WebRTC with relay fallback), and end-to-end encrypted push
+  helpers.
+version: 1.5.0
+homepage: https://catzconnect.com
+repository: https://github.com/Catalizo/catzconnect-dart-sdk
+
+environment:
+  # sodium_libs 3.4.6 needs Dart 3.9 / Flutter 3.35.
+  sdk: '>=3.9.0 <4.0.0'
+  flutter: '>=3.35.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_webrtc: ^1.0.0
+  web_socket_channel: ^3.0.0
+  # libsodium for Flutter (bundles the native library on Android, iOS,
+  # macOS, Linux and Windows; sodium.js on the web).
+  sodium_libs: ^3.4.6
+  # The Dart API sodium_libs is built on (a dependency of sodium_libs, pinned
+  # to the same release line). Listed because the SDK imports
+  # package:sodium/sodium.ffi.dart for crypto_aead_chacha20poly1305_ietf.
+  sodium: ^3.4.6
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^4.0.0
