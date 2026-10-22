@@ -5,6 +5,7 @@
 
 import 'dart:convert';
 
+import 'messages.dart' show MessageLimits, epochMsOrNull, isValidMessageId;
 import 'models.dart';
 
 /// Maximum frame size accepted by the server.
@@ -54,6 +55,13 @@ sealed class ServerMessage {
         return IceRefreshMessage.fromJson(json);
       case 'error':
         return ErrorMessage.fromJson(json);
+      case 'warning':
+        return WarningMessage.fromJson(json);
+      case 'warning_cleared':
+        return WarningClearedMessage.fromJson(json);
+      // `chat` / `data` frames stay an [UnknownMessage] so the sealed set
+      // (and apps' exhaustive switches over it) is the same as in 1.9.0;
+      // read them with [CallMessageFrame.tryFrom].
       case 'ping':
         return PingMessage.fromJson(json);
       case 'pong':
@@ -66,7 +74,8 @@ sealed class ServerMessage {
 
 /// First frame after the socket opens.
 class HelloMessage extends ServerMessage {
-  HelloMessage._(super.raw, this.you, this.iceServers, this.iceTtl, this.maxParticipants, this.resume, this.resumeAll);
+  HelloMessage._(super.raw, this.you, this.iceServers, this.iceTtl, this.maxParticipants, this.resume, this.resumeAll,
+      this.messageLimits);
 
   factory HelloMessage.fromJson(Map<String, dynamic> json) {
     final Map<String, dynamic>? limits = asMap(json['limits']);
@@ -83,8 +92,13 @@ class HelloMessage extends ServerMessage {
       limits == null ? null : asInt(limits['max_participants']),
       json['resume'],
       all,
+      MessageLimits.fromJson(limits),
     );
   }
+
+  /// In-call chat / data caps (`limits.chat_max_chars`, …; defaults when
+  /// the server does not send them).
+  final MessageLimits messageLimits;
 
   /// The external user id this token belongs to (a string on the wire).
   final String? you;
@@ -265,7 +279,7 @@ class IceRefreshMessage extends ServerMessage {
 }
 
 class ErrorMessage extends ServerMessage {
-  ErrorMessage._(super.raw, this.error);
+  ErrorMessage._(super.raw, this.error, this.messageId);
 
   factory ErrorMessage.fromJson(Map<String, dynamic> json) => ErrorMessage._(
         json,
@@ -274,9 +288,101 @@ class ErrorMessage extends ServerMessage {
           asString(json['message']) ?? 'Unknown error',
           callId: asString(json['call_id']),
         ),
+        isValidMessageId(json['id']) ? json['id'] as String : null,
       );
 
   final CallError error;
+
+  /// The in-call chat / data message the server refused, by id (null for
+  /// other errors).
+  final String? messageId;
+}
+
+/// In-call chat (`t: chat`) or app data (`t: data`) relayed by the server.
+///
+/// Not a [ServerMessage] subtype (adding one to the sealed class would break
+/// exhaustive `switch`es in apps): such frames decode as an
+/// [UnknownMessage]; [CallMessageFrame.tryFrom] reads one.
+class CallMessageFrame {
+  CallMessageFrame._(this.raw, this.callId, this.id, this.from, this.userId, this.to, this.text, this.payload, this.ts);
+
+  factory CallMessageFrame.fromJson(Map<String, dynamic> json) {
+    return CallMessageFrame._(
+      json,
+      asString(json['call_id']) ?? '',
+      asString(json['id']) ?? '',
+      asString(json['from']) ?? '',
+      asString(json['user_id']) ?? '',
+      _nonEmpty(asString(json['to'])),
+      json['text'] is String ? json['text'] as String : null,
+      json['payload'],
+      epochMsOrNull(json['ts']),
+    );
+  }
+
+  /// The chat / data frame inside [m] (an [UnknownMessage] with `t` chat or
+  /// data); null for anything else.
+  static CallMessageFrame? tryFrom(ServerMessage m) {
+    if (m is! UnknownMessage) return null;
+    final String t = m.type;
+    return t == 'chat' || t == 'data' ? CallMessageFrame.fromJson(m.raw) : null;
+  }
+
+  /// The decoded JSON object.
+  final Map<String, dynamic> raw;
+
+  /// `chat` or `data`.
+  String get type => asString(raw['t']) ?? '';
+
+  /// True for chat, false for data.
+  bool get isChat => type == 'chat';
+  final String callId;
+  final String id;
+
+  /// Sender's pid.
+  final String from;
+  final String userId;
+
+  /// This client's pid for a private message; null when sent to everyone.
+  final String? to;
+  final String? text;
+  final Object? payload;
+
+  /// Server time, ms since epoch (null when missing or out of range).
+  final int? ts;
+}
+
+/// Something may degrade the call (`large_call`, `relay_busy`,
+/// `relay_unavailable`, or a code newer than this SDK). The client turns it
+/// into a [CallWarning] on `CatzCallClient.warnings`.
+class WarningMessage extends ServerMessage {
+  WarningMessage._(super.raw, this.callId, this.code, this.participants, this.message);
+
+  factory WarningMessage.fromJson(Map<String, dynamic> json) => WarningMessage._(
+        json,
+        _nonEmpty(asString(json['call_id'])),
+        (asString(json['code']) ?? '').trim(),
+        asInt(json['participants']),
+        _nonEmpty(asString(json['message'])),
+      );
+
+  final String? callId;
+  final String code;
+  final int? participants;
+
+  /// English text from the server, when sent.
+  final String? message;
+}
+
+/// A server warning is over.
+class WarningClearedMessage extends ServerMessage {
+  WarningClearedMessage._(super.raw, this.callId, this.code);
+
+  factory WarningClearedMessage.fromJson(Map<String, dynamic> json) =>
+      WarningClearedMessage._(json, _nonEmpty(asString(json['call_id'])), (asString(json['code']) ?? '').trim());
+
+  final String? callId;
+  final String code;
 }
 
 class PingMessage extends ServerMessage {
@@ -293,7 +399,8 @@ class PongMessage extends ServerMessage {
   const PongMessage(super.raw);
 }
 
-/// A frame type this SDK version does not know. Ignored by the client.
+/// A frame type this SDK version does not know (ignored by the client), or
+/// an in-call `chat` / `data` frame: see [CallMessageFrame.tryFrom].
 class UnknownMessage extends ServerMessage {
   const UnknownMessage(super.raw);
 }
@@ -386,10 +493,28 @@ class SignalData {
 
 /// An outgoing frame.
 class ClientMessage {
-  const ClientMessage(this.type, this.fields);
+  // ignore: prefer_initializing_formals
+  const ClientMessage(this.type, this.fields, {bool? queue}) : _queue = queue;
 
   final String type;
   final Map<String, dynamic> fields;
+
+  /// Overrides [queueable] (unreliable data is not worth sending late).
+  final bool? _queue;
+
+  /// In-call chat to everyone, or to one participant ([to]: its pid).
+  static ClientMessage chat(String callId, String id, String text, {String? to}) => ClientMessage(
+        'chat',
+        <String, dynamic>{'call_id': callId, 'id': id, 'text': text, 'to': ?to},
+      );
+
+  /// App data (any JSON value). Not queued while reconnecting unless [reliable].
+  static ClientMessage data(String callId, String id, Object? payload, {String? to, bool reliable = true}) =>
+      ClientMessage(
+        'data',
+        <String, dynamic>{'call_id': callId, 'id': id, 'payload': payload, 'to': ?to},
+        queue: reliable,
+      );
 
   static ClientMessage join(String callId, {required bool audio, required bool video, String? platform}) =>
       ClientMessage(
@@ -397,7 +522,7 @@ class ClientMessage {
         <String, dynamic>{
           'call_id': callId,
           'media': <String, dynamic>{'audio': audio, 'video': video},
-          if (platform != null) 'platform': platform,
+          'platform': ?platform,
         },
       );
 
@@ -407,7 +532,7 @@ class ClientMessage {
         <String, dynamic>{
           'call_id': callId,
           if (audio != null && video != null) 'media': <String, dynamic>{'audio': audio, 'video': video},
-          if (platform != null) 'platform': platform,
+          'platform': ?platform,
         },
       );
 
@@ -449,7 +574,7 @@ class ClientMessage {
 
   /// Whether the frame should be kept and sent later while the socket is
   /// reconnecting. Pongs and stats are only meaningful right now.
-  bool get queueable => type != 'pong' && type != 'stats' && type != 'resume';
+  bool get queueable => _queue ?? (type != 'pong' && type != 'stats' && type != 'resume');
 
   Map<String, dynamic> toJson() => <String, dynamic>{'t': type, ...fields};
 

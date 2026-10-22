@@ -8,11 +8,17 @@ import 'package:flutter_webrtc/flutter_webrtc.dart'
     show
         MediaStream,
         MediaStreamTrack,
+        RTCDataChannel,
+        RTCDataChannelInit,
+        RTCDataChannelMessage,
+        RTCDataChannelState,
         RTCIceCandidate,
         RTCIceConnectionState,
         RTCPeerConnection,
         RTCPeerConnectionState,
+        RTCRtpEncoding,
         RTCRtpMediaType,
+        RTCRtpParameters,
         RTCRtpSender,
         RTCRtpTransceiverInit,
         RTCSessionDescription,
@@ -23,9 +29,11 @@ import 'package:flutter_webrtc/flutter_webrtc.dart'
         createPeerConnection;
 
 import 'backoff.dart';
+import 'messages.dart' show kReliableChannelLabel, kUnreliableChannelLabel;
 import 'models.dart';
 import 'protocol.dart';
 import 'stats.dart';
+import 'warnings.dart' show VideoTarget;
 
 const String _stable = 'stable';
 const String _haveLocalOffer = 'have-local-offer';
@@ -62,6 +70,7 @@ class PeerSession {
     this.onReconnecting,
     this.onReconnected,
     this.onError,
+    this.onChannelMessage,
   });
 
   final String callId;
@@ -85,6 +94,10 @@ class PeerSession {
   final void Function(PeerSession session, int attempt)? onReconnecting;
   final void Function(PeerSession session)? onReconnected;
   final void Function(PeerSession session, CallError error)? onError;
+
+  /// A text message on one of the session's data channels (in-call chat /
+  /// data).
+  final void Function(PeerSession session, String text)? onChannelMessage;
 
   String get pid => peer.pid;
 
@@ -136,8 +149,25 @@ class PeerSession {
   );
   int _restartAttempt = 0;
 
+  // In-call message channels (ordered + reliable, and unordered with at
+  // most one retransmit), opened by the initiator, adopted by the answerer.
+  RTCDataChannel? _reliableChannel;
+  RTCDataChannel? _unreliableChannel;
+  final Map<String, RTCDataChannelState> _channelState = <String, RTCDataChannelState>{};
+
   // Stats.
   final StatsAccumulator _stats = StatsAccumulator();
+
+  /// Separate counters for the ~2 s health checks, so they do not disturb
+  /// the 10 s quality samples.
+  final StatsAccumulator _healthStats = StatsAccumulator();
+
+  /// When the first health sample with a selected path was taken (bandwidth
+  /// estimates ramp up after it).
+  DateTime? firstPathAt;
+
+  /// Key of the video encoding last applied with [applyVideo].
+  String _videoKey = '';
   ConnectionType? _connectionType;
   ConnectionType? get connectionType => _connectionType;
 
@@ -203,6 +233,9 @@ class PeerSession {
     pc.onConnectionState = (RTCPeerConnectionState state) {
       if (state == RTCPeerConnectionState.RTCPeerConnectionStateFailed) requestRestart();
     };
+    pc.onDataChannel = (RTCDataChannel channel) {
+      _adoptChannel(channel);
+    };
     pc.onRenegotiationNeeded = () {
       // Before the first exchange the initial offer/answer already covers
       // the tracks added here; afterwards each event is honoured.
@@ -224,6 +257,19 @@ class PeerSession {
     }
 
     if (initiator) {
+      // Created before the first offer, so it carries the data section.
+      try {
+        _adoptChannel(await pc.createDataChannel(kReliableChannelLabel, RTCDataChannelInit()..ordered = true));
+        // The plugin drops `maxRetransmits: 0`, so 1 is the least it sends.
+        _adoptChannel(await pc.createDataChannel(
+            kUnreliableChannelLabel,
+            RTCDataChannelInit()
+              ..ordered = false
+              ..maxRetransmits = 1));
+      } catch (e) {
+        _reportError('data_channel_failed', 'Could not open a data channel (messages go through the server): $e');
+      }
+      if (_closed) return;
       await _addReceiveOnlyLines(pc);
       _needsNegotiation = true;
       _scheduleRun();
@@ -260,6 +306,56 @@ class PeerSession {
         init: RTCRtpTransceiverInit(direction: TransceiverDirection.RecvOnly),
       );
       _hasVideoLine = true;
+    }
+  }
+
+  // ---------------------------------------------------------------------
+  // Data channels (in-call messages)
+  // ---------------------------------------------------------------------
+
+  void _adoptChannel(RTCDataChannel ch) {
+    if (_closed) return;
+    final String label = ch.label ?? '';
+    if (label == kReliableChannelLabel) {
+      _reliableChannel = ch;
+    } else if (label == kUnreliableChannelLabel) {
+      _unreliableChannel = ch;
+    } else {
+      return; // not ours
+    }
+    final RTCDataChannelState? initial = ch.state;
+    if (initial != null) _channelState[label] = initial;
+    ch.onDataChannelState = (RTCDataChannelState state) {
+      _channelState[label] = state;
+    };
+    ch.onMessage = (RTCDataChannelMessage message) {
+      if (_closed || message.isBinary) return;
+      // A channel adopted after it opened may never report its state.
+      _channelState.putIfAbsent(label, () => RTCDataChannelState.RTCDataChannelOpen);
+      final void Function(PeerSession, String)? cb = onChannelMessage;
+      if (cb != null) cb(this, message.text);
+    };
+  }
+
+  bool _isOpen(RTCDataChannel? ch) =>
+      ch != null && (_channelState[ch.label ?? ''] ?? ch.state) == RTCDataChannelState.RTCDataChannelOpen;
+
+  /// Whether a message can go to this peer over a data channel now.
+  bool channelOpen({bool reliable = true}) {
+    if (_closed) return false;
+    return reliable ? _isOpen(_reliableChannel) : (_isOpen(_unreliableChannel) || _isOpen(_reliableChannel));
+  }
+
+  /// Sends one message over a data channel; false when it could not (use
+  /// the server).
+  Future<bool> sendOnChannel(String text, {bool reliable = true}) async {
+    if (!channelOpen(reliable: reliable)) return false;
+    final RTCDataChannel ch = (!reliable && _isOpen(_unreliableChannel)) ? _unreliableChannel! : _reliableChannel!;
+    try {
+      await ch.send(RTCDataChannelMessage(text));
+      return true;
+    } catch (_) {
+      return false;
     }
   }
 
@@ -636,7 +732,8 @@ class PeerSession {
 
   /// Reads `getStats()` and updates the connection type (emitting
   /// [onConnectionType] on change). Null when stats are unavailable.
-  Future<StatsSample?> sampleStats() async {
+  /// [health] uses the separate counters of the ~2 s health checks.
+  Future<StatsSample?> sampleStats({bool health = false}) async {
     final RTCPeerConnection? pc = _pc;
     if (pc == null || _closed) return null;
     final List<StatsReport> reports;
@@ -654,7 +751,9 @@ class PeerSession {
       });
       entries.add(StatsEntry(id: r.id, type: r.type, values: values));
     }
-    final StatsSample sample = _stats.add(entries, DateTime.now());
+    final DateTime now = DateTime.now();
+    final StatsSample sample = (health ? _healthStats : _stats).add(entries, now);
+    if (health && sample.connection != null) firstPathAt ??= now;
     final ConnectionType? type = sample.connection;
     if (type != null && type != _connectionType) {
       _connectionType = type;
@@ -662,6 +761,39 @@ class PeerSession {
       if (cb != null) cb(this, type);
     }
     return sample;
+  }
+
+  /// True when this peer has a video sender with a track.
+  bool get sendsVideo => _videoSender?.track != null;
+
+  /// Sets the outgoing video encoding on the video sender (never audio):
+  /// `maxBitrate`, `scaleResolutionDownBy` and `active` (false pauses video
+  /// without dropping the track, so resuming is instant and needs no
+  /// renegotiation). Does nothing when unchanged. Returns false when it
+  /// could not be applied yet (e.g. before negotiation) — try again later.
+  Future<bool> applyVideo(VideoTarget target) async {
+    if (_closed || _pc == null) return false;
+    final RTCRtpSender? sender = _videoSender;
+    if (sender == null || sender.track == null) return true; // nothing to shape
+    final String key = '${target.key}|${sender.senderId}';
+    if (key == _videoKey) return true;
+    // Never shaped and the target is the platform default: leave it alone.
+    if (_videoKey.isEmpty && target.isDefault) return true;
+    try {
+      final RTCRtpParameters params = sender.parameters;
+      final List<RTCRtpEncoding>? encodings = params.encodings;
+      if (encodings == null || encodings.isEmpty) return false; // not negotiated yet
+      final RTCRtpEncoding e = encodings.first;
+      final double? kbps = target.maxBitrateKbps;
+      e.maxBitrate = kbps == null ? null : (kbps * 1000).round();
+      e.scaleResolutionDownBy = target.scaleResolutionDownBy < 1 ? 1.0 : target.scaleResolutionDownBy;
+      e.active = target.active;
+      final bool ok = await sender.setParameters(params);
+      if (ok) _videoKey = key;
+      return ok;
+    } catch (_) {
+      return false;
+    }
   }
 
   // ---------------------------------------------------------------------
@@ -685,6 +817,17 @@ class PeerSession {
     _answererTimer = null;
     _pendingCandidates.clear();
     if (!_started.isCompleted) _started.complete();
+    for (final RTCDataChannel? ch in <RTCDataChannel?>[_reliableChannel, _unreliableChannel]) {
+      if (ch == null) continue;
+      ch.onMessage = null;
+      ch.onDataChannelState = null;
+      try {
+        await ch.close();
+      } catch (_) {}
+    }
+    _reliableChannel = null;
+    _unreliableChannel = null;
+    _channelState.clear();
     final RTCPeerConnection? pc = _pc;
     _pc = null;
     if (pc != null) await _disposePc(pc);
@@ -696,6 +839,7 @@ class PeerSession {
     pc.onIceConnectionState = null;
     pc.onConnectionState = null;
     pc.onRenegotiationNeeded = null;
+    pc.onDataChannel = null;
     try {
       await pc.close();
     } catch (_) {}

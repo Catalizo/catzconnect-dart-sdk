@@ -1,6 +1,6 @@
 # catzconnect (Flutter)
 
-The [Catz Connect](https://catzconnect.com) SDK for Flutter, version 1.5.0, in
+The [Catz Connect](https://catzconnect.com) SDK for Flutter, version 2.0.0, in
 step with the TypeScript, Go, PHP and Rust SDKs:
 
 - **`send()`** for Email, WhatsApp, Push, SMS and Voice (phone calls), with
@@ -13,6 +13,10 @@ step with the TypeScript, Go, PHP and Rust SDKs:
 - **Push helpers**: `generateDeviceKeys`, `isSealedPush`, `openPushPayload`
   for end-to-end encrypted notifications; `computeUserHash` and
   `verifyWebhookSignature` for your server.
+- **App keys** (`CatzConnect.app`): call the API straight from a mobile app
+  without the key being usable elsewhere — sessions are issued only after a
+  Google Play Integrity (Android) or Apple App Attest (iOS) check. See
+  [App keys](#app-keys-mobile-apps).
 - SMS and Voice helpers: `analyseSms`, `normaliseE164`, `isValidSmsSender`,
   `isValidDltId`, `validateVoiceText`, `isValidVoiceLanguage`, …
 
@@ -39,8 +43,12 @@ The recommended pattern:
 The app asks *your* backend (with your own user authentication) to send the
 OTP or create the call; your backend calls Catz Connect.
 
-If you decide to embed a key in an app anyway (an internal tool, a kiosk, a
-prototype):
+**No backend? Use an [app key](#app-keys-mobile-apps)** instead of a server
+key: it only works with an app session that the server issues after a Play
+Integrity / App Attest check, so a copy taken out of the app is useless.
+
+If you decide to embed a *server* key in an app anyway (an internal tool, a
+kiosk, a prototype):
 
 1. **Create a dedicated key for the app** in the panel (Developers → API
    keys) and **restrict it to exactly what the app needs**: only the
@@ -55,25 +63,245 @@ prototype):
 4. Never put the push identity secret (`pis_…`) or a webhook signing secret
    (`whsec_…`) in an app.
 
+## App keys (mobile apps)
+
+An **app key** is an API key made for apps that call Catz Connect directly —
+typically to send a sign-in code — without a backend of your own. It only
+works together with a short-lived **app session**, which the server issues
+after the device proves it is running *your genuine app*:
+
+- **Android**: a [Google Play Integrity](https://developer.android.com/google/play/integrity)
+  verdict (classic request). The server decodes it with your Google service
+  account and checks the package name, your signing certificate, that Google
+  Play recognises the app (`PLAY_RECOGNIZED`) and that the device passes
+  `MEETS_DEVICE_INTEGRITY` (or `MEETS_STRONG_INTEGRITY` when the key asks for it).
+- **iOS**: [Apple App Attest](https://developer.apple.com/documentation/devicecheck/establishing-your-app-s-integrity)
+  (`DCAppAttestService`). The first run attests a hardware-backed key (team
+  ID + bundle ID, certificate chain to Apple's root); later sessions use an
+  assertion signed with that key.
+
+So an app key copied out of the app is useless on its own: every request also
+needs `X-Catz-App-Session`, and only the genuine app on a real device can get
+one. On top of that the server enforces the key's limits (per device per
+hour, per recipient per hour, per key per day, allowed templates — by
+default only the built-in `Otp`; never `Custom` bodies), because attestation
+does not stop abuse *through* the genuine app.
+
+### How it works
+
+```
+app ──POST /sdk/app/challenge {platform}──────────────▶ Catz Connect   (Bearer app key, encrypted)
+    ◀── challenge (single use, 5 min), cloud_project_number
+app ── Android: Play Integrity token, nonce = challenge
+       iOS: generateKey + attestKey (first run) or generateAssertion,
+            clientDataHash = SHA-256(challenge)
+app ──POST /sdk/app/session {challenge, device_id, token | attestation | assertion}──▶
+    ◀── session_token (as1.…), expires_in (default 1 h), limits
+app ──POST /sdk/send   X-Catz-App-Session: as1.…──────▶
+```
+
+The SDK does all of this for you:
+
+```dart
+final CatzConnect catz = CatzConnect.app(
+  appKey: const String.fromEnvironment('CATZ_APP_KEY'),
+  privateKey: const String.fromEnvironment('CATZ_APP_PRIVATE_KEY'),
+  serverPublicKey: const String.fromEnvironment('CATZ_SERVER_PUBLIC_KEY'),
+  // Android, optional: the Cloud project linked in Play Console. When null,
+  // the number saved on the app key is used.
+  playCloudProjectNumber: null,
+  // Emulators, the iOS Simulator and builds not installed from Google Play.
+  // Never in release builds.
+  debugToken: kReleaseMode ? null : const String.fromEnvironment('CATZ_DEBUG_TOKEN'),
+);
+
+await catz.send(SendInput(
+  channel: Channel.sms,
+  type: MessageType.verification,
+  template: Template.otp,
+  payload: SendPayload(to: phone, otp: code),
+));
+```
+
+- The session is requested on the first request (or call
+  `await catz.appSession!.ensure()` at start-up to attest ahead of time),
+  cached in memory, and renewed on the next request once it is within 20 % of
+  its lifetime of expiring (at most 5 minutes before). There is no background
+  timer, so an idle app spends no attestations. If a renewal fails while the
+  old session is still valid, the old one is used.
+- Concurrent requests share one attestation.
+- A request refused with `app_session_expired`, `app_session_invalid` or
+  `app_session_required` (the key's settings changed, "sign out all
+  devices", key rolled) gets a new session and is sent once more.
+- `device_id`: a random id created once per install (22 characters,
+  base64url) and stored by the plugin (SharedPreferences on Android,
+  UserDefaults on iOS). It is not a hardware identifier and is not secret;
+  the per-device limit counts it.
+- iOS: the App Attest key id is stored the same way (it is not secret either;
+  the private key never leaves the Secure Enclave). If App Attest reports
+  `invalidKey` (the app was reinstalled or restored onto another device) or
+  the server answers `unknown_key`, `key_exists`, `bad_signature`,
+  `counter` or `device_mismatch`, the SDK discards it, generates a new key and attests again —
+  once.
+- `challenge_invalid` (used or expired challenge) → a new challenge, once.
+- `catz.appSession!.current` has the session's `expiresAt`, `debug` flag and
+  `limits`; `clear()` drops it, `resetDevice()` also forgets the device id
+  and the App Attest key.
+
+`calls.*` is not available with app keys (`not_allowed_for_app_keys`): mint
+call tokens on your backend with a server key.
+
+### App key errors
+
+```dart
+try {
+  await catz.send(input);
+} on CatzAttestationException catch (e) {
+  // e.reason, e.source (device | server), e.retryable, e.platform, e.nativeCode
+} on CatzRateLimitException catch (e) {
+  // 429: e.retryAfter, e.limit ('device' | 'recipient' | 'key')
+} on CatzApiException catch (e) {
+  // template_not_allowed, custom_body_not_allowed, not_an_app_key, …
+}
+```
+
+| `reason` | Source | Meaning / what to do |
+| --- | --- | --- |
+| `not_play_recognized` | server | The build was not installed from Google Play (sideloaded, `flutter run`). Use an internal testing track, or a debug token while developing. |
+| `device_integrity` | server | The device fails Play's device integrity (rooted, emulator, unlocked bootloader). |
+| `wrong_package` / `wrong_certificate` | server | The package name or signing certificate does not match the key. Add the SHA-256 of the **app signing key** from Play Console. |
+| `nonce_mismatch`, `expired`, `challenge_invalid` | server | The verdict does not belong to this challenge or is too old; retrying usually works. |
+| `play_api_error` | server | Google's decode call failed (service account, API not enabled, quota). Retry later; check the key's service account. |
+| `unknown_key`, `key_exists`, `bad_signature`, `counter`, `device_mismatch` | server | App Attest key problems; the SDK re-attests once by itself. |
+| `wrong_environment` | server | The App Attest environment (development / production) does not match the key's iOS environment. |
+| `bad_format`, `not_configured`, `platform_not_configured` | server | Malformed token, or the key has no settings for this platform. |
+| `debug_not_allowed`, `bad_debug_token` | server | Debug tokens are off on the key, or the token was revoked / mistyped. |
+| `simulator_requires_debug_token` | device | App Attest does not work in the iOS Simulator; pass `debugToken`. |
+| `emulator_requires_debug_token` | device | An Android emulator failed attestation; pass `debugToken`. |
+| `app_attest_unsupported` | device | iOS before 14, or an app extension. |
+| `integrity_<code>` | device | A Play Integrity `IntegrityErrorCode`, e.g. `integrity_network_error`, `integrity_play_store_not_found`, `integrity_play_services_version_outdated`, `integrity_cloud_project_number_is_invalid`. |
+| `app_attest_<code>` | device | A `DCError`: `app_attest_invalid_key`, `app_attest_server_unavailable`, `app_attest_feature_unsupported`, `app_attest_invalid_input`, `app_attest_unknown_system_failure`. |
+| `unsupported_platform`, `timeout` | device | Not Android/iOS (or the plugin is not registered), or the native call took longer than 60 s. |
+
+### Android setup
+
+1. **Play Console** → your app → *Test and release* → *App integrity* →
+   *Play Integrity API*: **link a Google Cloud project** (create one if
+   needed). Note its **project number** (Cloud console → project
+   dashboard); enable the *Google Play Integrity API* in that project.
+2. In the same Cloud project, **create a service account** (IAM & Admin →
+   Service accounts → Create) and a **JSON key** for it (Keys → Add key →
+   JSON). No extra role is needed: the account only calls
+   `decodeIntegrityToken` for apps linked to its project.
+3. **Signing certificate**: Play Console → *App integrity* → *App signing* →
+   copy the **SHA-256 certificate fingerprint of the app signing key** (and
+   of the upload key if you also test builds that are not re-signed by Play).
+4. In the panel: **Developers → API keys → Create key → App key** → *Android*: package
+   name, the SHA-256 fingerprint(s), the project number, and upload the
+   service-account JSON (stored encrypted, never shown again).
+5. Nothing to add to your app: the plugin brings
+   `com.google.android.play:integrity:1.4.0`. `minSdkVersion` 23 as before.
+
+Play Integrity verdicts only pass for builds **installed from Google Play**
+(any track, including internal testing). Classic requests count against the
+Play Integrity daily quota of your app (10,000 by default; Google raises it
+on request), which is why the SDK reuses sessions instead of attesting per
+request.
+
+### iOS setup
+
+1. In Xcode → *Runner* target → *Signing & Capabilities* → **+ Capability →
+   App Attest**. This adds `com.apple.developer.devicecheck.appattest-environment`
+   to `Runner.entitlements`:
+
+   ```xml
+   <key>com.apple.developer.devicecheck.appattest-environment</key>
+   <string>production</string>   <!-- or development -->
+   ```
+
+   The App ID must have the App Attest capability (Xcode does it with
+   automatic signing; otherwise enable it in *Certificates, Identifiers &
+   Profiles*).
+2. In the panel: **Developers → API keys → your app key → iOS**: Team ID, bundle ID and the
+   environment. Development-signed builds attest in the development
+   environment unless the entitlement says `production`; TestFlight and App
+   Store builds use production. A mismatch fails with `wrong_environment`.
+3. `ios/Podfile`: `platform :ios, '13.0'` still works (the plugin builds for
+   iOS 13; App Attest itself needs **iOS 14** and is checked at run time).
+   CocoaPods and Swift Package Manager are both supported.
+
+App Attest is not available in the Simulator and in most app extensions.
+Apple rate-limits new attestations per app; a gradual roll-out is wise if
+millions of installs will attest on the same day.
+
+### Debug tokens (emulators, Simulator, development builds)
+
+On the app key, turn on **Allow debug tokens** and create a token (`cdt_…`,
+shown once). Pass it as `debugToken:` in debug builds only — for example
+from `--dart-define=CATZ_DEBUG_TOKEN=…` with `kReleaseMode ? null : …`. With a
+debug token the SDK skips Play Integrity / App Attest and the server issues a
+session marked `debug`. In a release build (`kReleaseMode`) the SDK ignores
+the token (and prints a warning) and attests as usual. Anyone holding a debug
+token can get sessions (at most 60 an hour per token), so revoke tokens you
+no longer need, and turn debug off on keys used by production apps.
+
+### What app keys do not protect against
+
+- **Abuse through the genuine app** on a genuine device (someone scripting
+  your app's UI, device farms): that is what the per-device, per-recipient
+  and per-key limits and the template allow-list are for. Keep them tight and
+  add your own checks (sign-in throttling, CAPTCHA) where it matters.
+- **Who the user is**: attestation proves the app and device, not the
+  person. App keys therefore cannot create calls or mint call tokens.
+- **A session token copied off a device** during its lifetime (default
+  1 hour): it is bound to the key and the device id and limited like the
+  device, and expires on its own; "sign out all devices" on the key revokes
+  every session at once.
+- **Compromised devices that still pass** Play's device integrity, or a
+  jailbroken iPhone with a valid App Attest key. Turn on *strong integrity*
+  for Android where your users' devices support it.
+- Builds outside Google Play / the App Store (side-loaded APKs fail
+  `not_play_recognized` by design).
+
+Other SDKs (TypeScript, Go, PHP, Rust) run on servers and have no
+attestation: requests they make with an app key are refused with
+`app_session_required`. Use server keys there.
+
+### Migrating from an embedded server key
+
+Apps that use server keys, the call client or the push helpers need no code
+changes for 2.0.0 — the package is now a Flutter plugin, so rebuild the app
+(`flutter clean` if the build caches the old plugin list; iOS runs
+`pod install` / resolves the Swift package automatically). To move an app
+that embeds a server key to an app key:
+
+1. Create the app key and do the Android / iOS setup above.
+2. Replace `CatzConnect(env: EnvValues(apiKey: …, …))` with
+   `CatzConnect.app(appKey: …, privateKey: …, serverPublicKey: …)`.
+3. Ship the update, watch the key's *Refused attempts* tab (App settings), then
+   **revoke the old embedded server key** (until you do, it can still be
+   extracted from older builds).
+
 ---
 
 ## Install
 
 ```yaml
 dependencies:
-  catzconnect: ^1.5.0
+  catzconnect: ^2.0.0
 ```
 
 ```sh
 flutter pub get
 ```
 
-Requirements: Dart 3.9+ and Flutter 3.35+ (needed by `sodium_libs` 3.4.x).
-Dependencies: `sodium_libs` (^3.4.6, bundles libsodium), `sodium` (^3.4.6,
-the Dart API `sodium_libs` is built on), `flutter_webrtc` (^1.0.0) and
-`web_socket_channel` (^3.0.0). The package re-exports the WebRTC types you
+Requirements: Dart 3.13+ and Flutter 3.47+ (needed by `sodium` 4.x).
+Dependencies: `sodium` (^4.1.2, builds and bundles libsodium through its
+build hooks), `flutter_webrtc` (^1.0.0) and `web_socket_channel` (^3.0.0). The package re-exports the WebRTC types you
 need for rendering (`MediaStream`, `RTCVideoRenderer`, `RTCVideoView`,
-`RTCVideoViewObjectFit`).
+`RTCVideoViewObjectFit`). Since 2.0.0 the package is a Flutter plugin (for
+app keys): Android adds `com.google.android.play:integrity`, iOS links
+`DeviceCheck`; nothing runs until you use `CatzConnect.app`.
 
 ```dart
 import 'package:catzconnect/catzconnect.dart';
@@ -87,7 +315,7 @@ missing native library straight away rather than on the first send — call:
 ```dart
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await CatzConnect.init(); // sodium_libs SodiumInit.init() + SodiumSumoInit.init()
+  await CatzConnect.init(); // sodium SodiumInit.init() + SodiumSumoInit.init()
   runApp(const MyApp());
 }
 ```
@@ -99,27 +327,33 @@ Future<void> main() async {
 | Platform | `send()` / `calls.*` | Push helpers | Call client |
 | --- | --- | --- | --- |
 | Android, iOS, macOS, Linux, Windows | ✓ | ✓ | ✓ |
-| Web | ✗ (`UnsupportedError`: they use `dart:io` `HttpClient` and native libsodium) | ✓ after `sodium_libs:update_web` | ✓ |
+| Web | ✗ (`UnsupportedError`: they use `dart:io` `HttpClient` and native libsodium) | ✓ after `dart run sodium:update_web` | ✓ |
 
-### libsodium (sodium_libs)
+App keys (`CatzConnect.app`) work on Android and iOS only; elsewhere they
+throw a `CatzAttestationException` with reason `unsupported_platform`.
 
-`sodium_libs` ships libsodium for Android, iOS, macOS, Linux and Windows; there
-is nothing to install.
+### libsodium
 
-- **iOS / macOS**: after upgrading, if the build cannot find libsodium,
-  run `flutter clean`, delete `ios/Pods` (or `macos/Pods`) and
-  `Podfile.lock`, and `pod install` again.
-- **Linux**: optionally link the system libsodium instead of the bundled one
-  (see the sodium_libs README, `pkg-config`).
+`package:sodium` (4.x) builds libsodium from source with its build hooks
+(native assets) and bundles it into your app on Android, iOS, macOS, Linux
+and Windows; there is nothing to install. The first build needs a C
+toolchain on the build machine (Xcode command line tools on macOS, the
+Android NDK for Android, `make` and a C compiler on Linux; on Windows,
+cross-compiling for Android needs Git Bash and `make`).
+
+- **Upgrading from 1.x** (which used the discontinued
+  `sodium_libs`): remove `sodium_libs` from your own `pubspec.yaml` if you
+  added it, then `flutter clean && flutter pub get`. On iOS / macOS also
+  delete `ios/Pods` (or `macos/Pods`) and `Podfile.lock` and run
+  `pod install` again.
 - **Web** (push helpers only): download sodium.js into `web/` once:
 
   ```sh
-  flutter pub run sodium_libs:update_web
+  dart run sodium:update_web
   ```
 
 `send()` and `calls.*` use `crypto_aead_chacha20poly1305_ietf` through
-`package:sodium`'s FFI bindings on the libsodium that sodium_libs bundles
-(the high-level `sodium` API only wraps the original 8-byte-nonce
+`package:sodium`'s FFI bindings on the bundled libsodium (the high-level `sodium` API only wraps the original 8-byte-nonce
 ChaCha20-Poly1305), plus `crypto_scalarmult` and `crypto_generichash` from
 the Sumo API. The output is byte-identical to the other SDKs; the tests check
 this against vectors produced by the TypeScript SDK.
@@ -194,7 +428,14 @@ first. Credentials come from `EnvValues` (on the client or per call) or from
 `--dart-define` / the process environment: `CATZCONNECT_API_KEY`,
 `CATZCONNECT_PRIVATE_KEY`, `CATZCONNECT_SERVER_PUBLIC_KEY`, and the optional
 `CATZCONNECT_BASE_URL` (default `https://api.catzconnect.com`; a trailing
-slash is removed). Keys are read leniently: surrounding whitespace, a
+slash is removed). The base URL must be `https://`: plain `http://` is
+accepted only for `localhost`, `127.0.0.1`, `[::1]` and `10.0.2.2` (the
+Android emulator's host); any other `http://` URL makes requests throw a
+`CatzException` before anything is sent, since the API key would travel
+unencrypted. To allow it anyway pass `allowInsecureHttp: true` to
+`CatzConnect(...)` / `CatzConnect.app(...)` or set
+`CATZCONNECT_ALLOW_INSECURE_HTTP=1`. `EnvValues.toString()` never prints
+the API key or the private key. Keys are read leniently: surrounding whitespace, a
 trailing newline, URL-safe base64 and missing padding are accepted.
 
 ```dart
@@ -430,7 +671,10 @@ try {
 }
 ```
 
-`CatzApiError` is an alias of `CatzApiException` (the TypeScript name).
+`CatzApiError` is an alias of `CatzApiException` (the TypeScript name). A
+429 is a `CatzRateLimitException` (a `CatzApiException` with `retryAfter`
+and `limit`). App keys add `CatzAttestationException` (see
+[App key errors](#app-key-errors)).
 
 ## Calls server API
 
@@ -511,12 +755,16 @@ await client.leave();         // hang up
 await client.dispose();       // when the user signs out
 ```
 
-`CatzCallClient({String? token, Future<String> Function()? getToken, String url = 'wss://api.catzconnect.com/rtc/v1/ws'})`
+`CatzCallClient({String? token, Future<String> Function()? getToken, String url = 'wss://api.catzconnect.com/rtc/v1/ws', bool relayOnly = false, bool allowInsecureHttp = false, bool adaptiveVideo = true, Duration healthInterval = const Duration(seconds: 2)})`
+
+`url` must be `wss://` (`ws://` only to localhost, 127.0.0.1, ::1 or
+10.0.2.2, or with `allowInsecureHttp: true`); otherwise the constructor
+throws an `ArgumentError`.
 
 | Member | Description |
 | --- | --- |
 | `connect()` | Opens signaling and waits for `hello`. It retries for up to 20 s, then throws `CallError('connect_failed')`. |
-| `join(callId, {audio, video, stream})` | Joins a call. Returns a `JoinResult` with the call, your `pid`, the peers already in the call, and `provider` for provider engines. |
+| `join(callId, {audio, video, stream, relayOnly})` | Joins a call. `relayOnly` overrides the client's setting for this call (see *Hiding IP addresses*). Returns a `JoinResult` with the call, your `pid`, the peers already in the call, and `provider` for provider engines. |
 | `accept(callId, {...})` / `decline(callId)` | Answer or reject an incoming call. |
 | `cancel([callId])` | The caller hangs up while the call is still ringing. |
 | `leave()` | Hang up and release the camera and microphone. |
@@ -525,6 +773,8 @@ await client.dispose();       // when the user signs out
 | `shareScreen()` / `stopShare()` | Replace the camera with the screen. Not available on every platform. |
 | `notifyNetworkChanged()` | Call this from your connectivity listener. It reconnects at once and restarts ICE. |
 | `collectStats()` | Take a quality sample now. This also runs every 10 s. |
+| `checkHealth()` | Run the network / CPU checks behind client warnings and adaptive video now. This also runs every `healthInterval` (2 s). |
+| `activeWarnings` | The `CallWarning`s in effect for the current call. |
 | `dispose()` / `close()` | Leave any call and shut the client down. |
 
 | Stream | Payload |
@@ -539,6 +789,8 @@ await client.dispose();       // when the user signs out
 | `reconnecting` / `reconnected` | `scope: signaling` (WebSocket) or `scope: peer` (ICE restart) |
 | `provider` | `ProviderEvent`: hand-off data when the engine is not `catz` |
 | `errors` | `CallError(code, message, callId)` |
+| `warnings` | `CallWarning`: something may degrade the call (see *Call warnings*); emitted once when it starts |
+| `warningsCleared` | `CallWarningCleared(code, callId, source, at)`: a warning is over (also for each active warning when the call ends) |
 | `closed` | The reason the client shut down |
 
 ### Ringing via push
@@ -602,6 +854,80 @@ client.provider.listen((ProviderEvent e) {
   expires or is refused. After a drop the client sends `resume` within the
   30 s grace, or joins again after it.
 
+### Call warnings
+
+There is no participant cap in the client: it connects to everyone the
+server admits. When something may degrade the call, `warnings` emits a
+`CallWarning` once, and `warningsCleared` emits when it is over (or when the
+call ends); `activeWarnings` lists the ones in effect. A `CallWarning` has
+`code`, `message` (English default — localise by `code`), `callId`,
+`participants` (when known), `source` (`CallWarningSource.server` or
+`.client`), `severity` (`info` or `warning`) and `at`.
+
+| Code (`CallWarningCodes.…`) | Source | When |
+| --- | --- | --- |
+| `large_call` (`largeCall`) | server | A peer-to-peer call has many participants (the server's `CALLS_P2P_WARN_AT`, default 5); cleared when it drops below. |
+| `relay_busy` (`relayBusy`) | server | The TURN relay is near capacity; cleared under 75 %. |
+| `relay_unavailable` (`relayUnavailable`) | server | The relay is down or refused this participant: the call may not connect on strict networks. |
+| `poor_network` (`poorNetwork`) | client | Estimated uplink below what the peers need, loss > 8 % or RTT > 600 ms, for 6 s. |
+| `device_overloaded` (`deviceOverloaded`) | client | The video encoder is CPU-limited for 6 s. |
+| `video_reduced` (`videoReduced`) | client, info | Adaptive video lowered the outgoing bitrate / resolution. |
+| `video_paused` (`videoPaused`) | client | Video stopped (under 150 kbps per peer) to keep audio clear; cleared when it resumes. |
+
+Codes are plain strings: newer servers may send codes this version does not
+know — show `message` for those. Client warnings are emitted once on entry
+and cleared after 6 s of recovery, with stricter exit thresholds (loss
+< 4 %, RTT < 400 ms), so they do not flap.
+
+```dart
+const Map<String, String> texts = <String, String>{   // your translations
+  CallWarningCodes.largeCall: 'Call quality may drop — many people are in this call',
+  CallWarningCodes.relayUnavailable: "Calls aren't available on this network right now",
+  CallWarningCodes.poorNetwork: 'Your connection is weak',
+  CallWarningCodes.videoPaused: 'Your video is paused to keep audio clear',
+};
+List<CallWarning> active = <CallWarning>[];
+client.warnings.listen((_) => setState(() => active = client.activeWarnings));
+client.warningsCleared.listen((_) => setState(() => active = client.activeWarnings));
+
+// in build():
+if (active.isNotEmpty)
+  MaterialBanner(
+    content: Text(texts[active.last.code] ?? active.last.message),
+    actions: <Widget>[TextButton(onPressed: () => setState(() => active = <CallWarning>[]), child: const Text('Dismiss'))],
+  ),
+```
+
+The example app (`example/lib/call_warnings.dart`) has a complete
+dismissible banner with English and German texts.
+
+**Adaptive video** (default; `CatzCallClient(adaptiveVideo: false)` turns
+it off). Every `healthInterval` (2 s) the client reads `getStats()`. In a
+call with several peers it splits the estimated uplink
+(`availableOutgoingBitrate`) across them — clamp(available / peers,
+150 kbps, 1.5 Mbps) per peer, with `scaleResolutionDownBy` 1 · 1.5 · 2 · 3
+as the budget shrinks — through `RTCRtpSender.setParameters`, and emits
+`video_reduced`. Under 150 kbps per peer it pauses video
+(`encodings[0].active = false`; the camera track stays, so resuming needs
+no renegotiation), emits `video_paused`, and retries with backoff once the
+link is calm. Audio is never touched. A 1:1 call keeps the platform's own
+bitrate control unless video has to pause.
+
+**Peer-to-peer first.** ICE uses `iceTransportPolicy: all` (unless
+`relayOnly`) with the server's ICE servers in the order given — STUN first —
+so a direct path is tried first and TURN is the fallback.
+
+### Hiding IP addresses (relay-only)
+
+By default ICE also offers this device's local and public addresses, so
+the other participants can learn them. `CatzCallClient(relayOnly: true)`
+(every call) or `join(callId, relayOnly: true)` / `accept(callId,
+relayOnly: true)` (one call; overrides the client) sets
+`iceTransportPolicy: relay`: media only flows through the TURN relay, at
+the cost of some latency and relay bandwidth. It needs TURN on the server;
+without TURN credentials a relay-only call cannot connect. `relayOnly` wins
+over an `iceTransportPolicy` in `rtcConfig`.
+
 ## Push helpers (in the app)
 
 End-to-end encrypted push: the device generates a keypair, keeps the
@@ -646,7 +972,7 @@ final bool ok = verifyWebhookSignature(rawBody, request.headers['catz-signature'
 
 ```yaml
 dependencies:
-  catzconnect: ^1.5.0   # was: catzconnect_calls: ^1.0.0
+  catzconnect: ^2.0.0    # was: catzconnect_calls: ^1.0.0
 ```
 
 ```dart
@@ -655,14 +981,18 @@ import 'package:catzconnect/catzconnect.dart'; // was: package:catzconnect_calls
 
 Everything the old package exported is exported unchanged. `CallParticipant`
 gained the optional `joinedAt`, `leftAt`, `seconds` and `connection` fields
-that `calls.get` returns. The Dart/Flutter minimum is now 3.9 / 3.35 (for
-`sodium_libs`).
+that `calls.get` returns. The Dart/Flutter minimum is now 3.13 / 3.47 (for
+`sodium` 4.x).
 
 ## Example app
 
 `example/` has a minimal call app: paste a token and a call id, join, and
 you get local and remote video with mute, camera and hang-up buttons.
-Incoming calls ring in the app too. `example/lib/server_api_examples.dart`
+Incoming calls ring in the app too, and call warnings show as a dismissible
+banner with friendly, localisable texts (`example/lib/call_warnings.dart`). The shield button opens
+`example/lib/app_key_example.dart`: attest and send an OTP with an app key
+(`--dart-define=CATZ_APP_KEY=… CATZ_APP_PRIVATE_KEY=… CATZ_SERVER_PUBLIC_KEY=…`,
+plus `CATZ_DEBUG_TOKEN=…` on emulators). `example/lib/server_api_examples.dart`
 shows `send()` on every channel, the calls API, the push helpers and the
 server-side helpers. The repository holds only `lib/` and `pubspec.yaml`,
 so generate the platform folders once:
@@ -682,11 +1012,9 @@ flutter analyze
 flutter test
 ```
 
-`flutter test` runs on the host, where Flutter plugins (and so the libsodium
-that sodium_libs bundles) are not available. The crypto tests load a system
-libsodium instead — `apt install libsodium23` (Debian/Ubuntu),
-`brew install libsodium` (macOS), or set `CATZ_LIBSODIUM=/path/to/libsodium.so`
-— and are skipped when there is none. The fixed test vectors in
+`flutter test` builds libsodium for the host through `package:sodium`'s build
+hooks (a C toolchain is needed the first time) and the crypto tests use it;
+they are skipped when it cannot be built or loaded. The fixed test vectors in
 `test/fixtures/vectors.json` come from the TypeScript SDK:
 
 ```sh
@@ -697,3 +1025,40 @@ node ../dart/catzconnect/tool/gen_vectors.mjs
 ## License
 
 ISC
+
+## Message status, retry-safe sends, test keys, hosted OTP (2.0.0)
+
+```dart
+final SendResponse res = await catz.send(SendInput(
+  channel: Channel.sms, type: MessageType.transactional, template: Template.custom,
+  payload: const SendPayload(to: '+919876543210', body: 'Shipped'),
+  idempotencyKey: 'ship-42', reference: 'order-42'));
+final Map<String, dynamic> msg = await catz.messages.get((res.data as Map)['message_id'] as String);
+final Map<String, dynamic> s = await catz.otp.start(channel: 'SMS', to: '+919876543210');
+await catz.otp.verify(verificationId: s['verification_id'] as String, code: typed); // throws CatzApiException (code otp_invalid, details['attempts_remaining'])
+```
+
+Keep `messages`, `otp` and `manage` on your server (they need a server key).
+`catz.pushDevices.register(publishableKey: …, token: …, platform: 'android')`
+uses only the project's publishable key and can run in the app. WhatsApp
+approved templates: `template: 'order_update'`, `SendPayload(whatsapp: {'language': 'en_US', 'body': ['Ravi']})`.
+Test keys are validated but never delivered or billed (`data['test']`,
+`parseWebhookEvent(...).test`).
+
+## Email topics, push broadcasts and topics (2.0.0)
+
+```dart
+// Push to a topic, later (server key); data['broadcast_id'] comes back.
+final SendResponse res = await catz.send(SendInput(
+  channel: Channel.push, type: MessageType.notification, template: Template.notification, identity: 'my-firebase',
+  payload: SendPayload(body: 'Today only', push: PushOptions(topic: 'deals', sendAt: DateTime.utc(2026, 11, 2, 9))),
+));
+await catz.push.broadcast((res.data as Map)['broadcast_id'] as String);
+// In the app, after pushDevices.register:
+await catz.pushDevices.subscribeTopics(publishableKey: pk, token: fcmToken, topics: <String>['deals']);
+// Email: SendPayload(topic: 'newsletter', …) — its opt-outs apply.
+```
+
+App and test keys are refused for broadcasts / topics. `kWebhookEvents`
+includes `email.complained`, `email.unsubscribed`, `push.opened`,
+`sms.inbound`, `sms.opt_out`, `whatsapp.opt_out`.

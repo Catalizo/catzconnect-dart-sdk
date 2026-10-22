@@ -1,11 +1,11 @@
 import 'package:flutter/foundation.dart' show visibleForTesting;
-import 'package:sodium_libs/sodium_libs.dart' show Sodium, SodiumInit;
+import 'package:sodium/sodium.dart' show Sodium, SodiumInit;
 
 import '../errors.dart';
 import 'crypto_backend.dart';
 import 'server_crypto_stub.dart' if (dart.library.io) 'server_crypto_io.dart' as impl;
 
-/// Loads libsodium (sodium_libs) once and hands it to the SDK.
+/// Loads libsodium (package:sodium) once and hands it to the SDK.
 ///
 /// Both loaders are lazy: the first `send()`, `calls.*` or push helper call
 /// loads what it needs. Call `CatzConnect.init()` at start-up to do it ahead
@@ -22,23 +22,26 @@ abstract final class CatzSodium {
       _server = null;
       if (e is UnsupportedError || e is CatzException) Error.throwWithStackTrace(e, st);
       Error.throwWithStackTrace(
-          CatzException('libsodium could not be loaded (sodium_libs SodiumSumoInit.init): $e', cause: e), st);
+          CatzException('libsodium could not be loaded (SodiumSumoInit.init): $e', cause: e), st);
     });
   }
 
   /// libsodium for the push helpers (every platform; on the web after
-  /// `flutter pub run sodium_libs:update_web`).
+  /// `dart run sodium:update_web`).
   static Future<Sodium> box() {
-    final Future<Sodium> f = _box ??= SodiumInit.init();
+    // SodiumInit.init() is synchronous on native platforms and asynchronous
+    // on the web (sodium.js); Future.sync covers both and turns a throw into
+    // a failed future.
+    final Future<Sodium> f = _box ??= Future<Sodium>.sync(SodiumInit.init);
     return f.catchError((Object e, StackTrace st) {
       _box = null;
       Error.throwWithStackTrace(
-          CatzException('libsodium could not be loaded (sodium_libs SodiumInit.init): $e', cause: e), st);
+          CatzException('libsodium could not be loaded (SodiumInit.init): $e', cause: e), st);
     });
   }
 
-  /// Use these instances instead of loading sodium_libs — for tests that run
-  /// on the host with a system libsodium (`flutter test` has no plugins).
+  /// Use these instances instead of loading libsodium — for tests that need
+  /// a specific instance.
   @visibleForTesting
   static void debugOverride({ServerCrypto? server, Sodium? box}) {
     if (server != null) _server = Future<ServerCrypto>.value(server);

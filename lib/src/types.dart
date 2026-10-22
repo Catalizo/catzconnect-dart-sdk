@@ -72,6 +72,8 @@ class SendInput {
     this.identity = '',
     this.payload = const SendPayload(),
     this.language,
+    this.idempotencyKey,
+    this.reference,
   });
 
   final Channel channel;
@@ -97,6 +99,17 @@ class SendInput {
   /// in that language.
   final String? language;
 
+  /// Retry-safe sends: the same key with the same request within 24 hours
+  /// returns the first answer instead of sending again (sent as the
+  /// `Idempotency-Key` header and the `idempotency_key` field). 1–255
+  /// visible ASCII characters. A different request with a used key fails
+  /// with `idempotency_conflict`.
+  final String? idempotencyKey;
+
+  /// Your own id for the message (≤ 128 characters), to find it again with
+  /// `messages.list`.
+  final String? reference;
+
   /// Reads the same map the other SDKs take:
   /// `{channel, type, template, identity, payload, language}`. Channel and type are
   /// matched case-insensitively.
@@ -109,6 +122,8 @@ class SendInput {
       identity: _str(json['identity']) ?? '',
       payload: p is Map ? SendPayload.fromJson(Map<String, dynamic>.from(p)) : const SendPayload(),
       language: _str(json['language']),
+      idempotencyKey: _str(json['idempotencyKey'] ?? json['idempotency_key']),
+      reference: _str(json['reference']),
     );
   }
 
@@ -119,6 +134,8 @@ class SendInput {
     String? identity,
     SendPayload? payload,
     String? language,
+    String? idempotencyKey,
+    String? reference,
   }) =>
       SendInput(
         channel: channel ?? this.channel,
@@ -127,6 +144,8 @@ class SendInput {
         identity: identity ?? this.identity,
         payload: payload ?? this.payload,
         language: language ?? this.language,
+        idempotencyKey: idempotencyKey ?? this.idempotencyKey,
+        reference: reference ?? this.reference,
       );
 }
 
@@ -148,6 +167,10 @@ class SendPayload {
     this.sender,
     this.dltTemplateId,
     this.provider,
+    this.whatsapp,
+    this.tracking,
+    this.topic,
+    this.push,
   });
 
   /// An email address for Email; a phone number with country code for
@@ -197,6 +220,26 @@ class SendPayload {
   /// Voice: call through this phone provider (its id or label).
   final String? provider;
 
+  /// WhatsApp: approved-template parameters (`template` = the Meta template
+  /// name) or a media message (`template: Template.custom`), as the API
+  /// names them: `{'language': 'en_US', 'header': {'type': 'text', 'text':
+  /// '#1'}, 'body': ['Ravi'], 'buttons': [{'index': 0, 'type': 'url',
+  /// 'text': 'abc'}]}` or `{'media': {'type': 'document', 'link':
+  /// 'https://…', 'filename': 'i.pdf'}}`.
+  final Map<String, Object?>? whatsapp;
+
+  /// Email: open / click tracking for this message.
+  final TrackingOverride? tracking;
+
+  /// Email: a subscription topic key of your organization (Email →
+  /// Preferences in the panel): its opt-outs apply and the message's
+  /// unsubscribe link unsubscribes from that topic only.
+  final String? topic;
+
+  /// Push: a broadcast, a topic send or a scheduled push (see
+  /// [PushOptions]). The answer's `data` then has `broadcast_id`.
+  final PushOptions? push;
+
   /// The payload as the API names its fields, without the `null` ones. The
   /// order matches the TypeScript `SendPayload` interface.
   Map<String, dynamic> toJson() => <String, dynamic>{
@@ -214,6 +257,10 @@ class SendPayload {
         if (sender != null) 'sender': sender,
         if (dltTemplateId != null) 'dlt_template_id': dltTemplateId,
         if (provider != null) 'provider': provider,
+        if (whatsapp != null) 'whatsapp': whatsapp,
+        if (tracking != null) 'tracking': tracking!.toJson(),
+        if (topic != null) 'topic': topic,
+        if (push != null && push!.isSet) 'push': push!.toJson(),
       };
 
   /// Reads the API's field names (`device_key`, `external_user_id`,
@@ -243,8 +290,65 @@ class SendPayload {
       sender: _str(json['sender']),
       dltTemplateId: _str(json['dlt_template_id']),
       provider: _str(json['provider']),
+      whatsapp: json['whatsapp'] is Map ? Map<String, Object?>.from(json['whatsapp'] as Map) : null,
+      tracking: json['tracking'] is Map ? TrackingOverride.fromJson(Map<String, dynamic>.from(json['tracking'] as Map)) : null,
+      topic: _str(json['topic']),
+      push: json['push'] is Map ? PushOptions.fromJson(Map<String, dynamic>.from(json['push'] as Map)) : null,
     );
   }
+}
+
+/// Email subscription topic keys: `[a-z0-9]` then up to 39 of `[a-z0-9_-]`.
+final RegExp kEmailTopicKey = RegExp(r'^[a-z0-9][a-z0-9_-]{0,39}$');
+
+/// Push topic names: 1–64 of `A-Z a-z 0-9 _ . ~ -`.
+final RegExp kPushTopicName = RegExp(r'^[A-Za-z0-9_.~-]{1,64}$');
+
+/// Push: send to every device ([broadcast]), every device subscribed to a
+/// [topic], or later ([sendAt], up to 30 days ahead; also with `to` or
+/// `externalUserId`). Server keys only. Follow the answer's
+/// `data['broadcast_id']` with `catzconnect.push.broadcast` / `cancel`.
+class PushOptions {
+  const PushOptions({this.broadcast = false, this.topic, this.sendAt});
+
+  final bool broadcast;
+  final String? topic;
+
+  /// Sent as RFC 3339 in UTC.
+  final DateTime? sendAt;
+
+  bool get isSet => broadcast || topic != null || sendAt != null;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        if (broadcast) 'broadcast': true,
+        if (topic != null) 'topic': topic,
+        if (sendAt != null) 'send_at': sendAt!.toUtc().toIso8601String(),
+      };
+
+  factory PushOptions.fromJson(Map<String, dynamic> json) => PushOptions(
+        broadcast: json['broadcast'] == true,
+        topic: _str(json['topic']),
+        sendAt: json['send_at'] == null ? null : DateTime.tryParse(json['send_at'].toString()),
+      );
+}
+
+/// Email: per-message open / click tracking; `null` inherits the domain /
+/// organization setting.
+class TrackingOverride {
+  const TrackingOverride({this.opens, this.clicks});
+
+  final bool? opens;
+  final bool? clicks;
+
+  Map<String, dynamic> toJson() => <String, dynamic>{
+        if (opens != null) 'opens': opens,
+        if (clicks != null) 'clicks': clicks,
+      };
+
+  factory TrackingOverride.fromJson(Map<String, dynamic> json) => TrackingOverride(
+        opens: json['opens'] is bool ? json['opens'] as bool : null,
+        clicks: json['clicks'] is bool ? json['clicks'] as bool : null,
+      );
 }
 
 String? _str(Object? v) => v?.toString();
@@ -336,4 +440,12 @@ class EnvValues {
 
   /// Catz Connect's public key, base64.
   final String serverPublicKey;
+
+  /// Never prints the API key or the private key (logs, `print(env)`).
+  @override
+  String toString() => 'EnvValues(apiKey: ${_redactSecret(apiKey)}, privateKey: [redacted], '
+      'serverPublicKey: $serverPublicKey)';
 }
+
+/// The first 4 characters of a secret and its length, or `[empty]`.
+String _redactSecret(String s) => s.isEmpty ? '[empty]' : '${s.length > 8 ? s.substring(0, 4) : ''}…[redacted, ${s.length} chars]';

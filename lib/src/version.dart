@@ -1,5 +1,5 @@
 /// The package version, sent in the `User-Agent` header.
-const String kCatzConnectVersion = '1.5.0';
+const String kCatzConnectVersion = '2.0.0';
 
 /// `User-Agent` for API requests (the Go, PHP and Rust SDKs send theirs too).
 const String kCatzConnectUserAgent = 'catzconnect-dart-sdk/$kCatzConnectVersion';

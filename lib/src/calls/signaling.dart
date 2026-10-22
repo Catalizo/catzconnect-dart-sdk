@@ -29,7 +29,9 @@ class SignalingSocket {
     this.openTimeout = const Duration(seconds: 15),
     this.silenceTimeout = const Duration(seconds: 45),
     this.maxQueue = 500,
-  })  : _token = token,
+  })
+      // ignore: prefer_initializing_formals
+      : _token = token,
         _connector = connector ?? _defaultConnector,
         _backoff = Backoff(
           initialDelay: const Duration(milliseconds: 500),

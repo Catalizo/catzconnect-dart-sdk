@@ -86,3 +86,64 @@ String computeUserHash(String externalUserId, String identitySecret) {
   }
   return toHex(hmacSha256(utf8.encode(identitySecret), utf8.encode(externalUserId)));
 }
+
+/// Every event a webhook can subscribe to.
+const List<String> kWebhookEvents = <String>[
+  'email.sent', 'email.failed', 'email.bounced', 'email.opened', 'email.clicked', 'email.received', //
+  'whatsapp.status', 'whatsapp.inbound', 'whatsapp.read', //
+  'push.sent', 'push.failed', //
+  'sms.sent', 'sms.delivered', 'sms.failed', 'sms.unknown', //
+  'call.ringing', 'call.started', 'call.ended', 'call.missed', 'call.declined', 'call.canceled', 'call.failed', //
+  'participant.joined', 'participant.left', //
+  'voice.answered', 'voice.completed', 'voice.failed', 'voice.unknown', //
+  'email.complained', 'email.unsubscribed', 'push.opened', 'sms.inbound', 'sms.opt_out', 'whatsapp.opt_out',
+];
+
+/// A verified webhook delivery. [test] is true for events of test (sandbox) keys.
+class WebhookEvent {
+  const WebhookEvent({
+    required this.id,
+    required this.type,
+    required this.createdAt,
+    required this.organizationId,
+    required this.test,
+    required this.data,
+  });
+
+  final String id;
+  final String type;
+  final String createdAt;
+  final String organizationId;
+  final bool test;
+  final Map<String, dynamic> data;
+}
+
+/// Verify the `Catz-Signature` header and decode the event. Throws a
+/// [FormatException] when the signature does not match (or is too old) or
+/// the body is not an event.
+WebhookEvent parseWebhookEvent(
+  Object rawBody,
+  String? header,
+  String secret, {
+  int toleranceSeconds = 300,
+  int? nowSeconds,
+}) {
+  if (!verifyWebhookSignature(rawBody, header, secret, toleranceSeconds: toleranceSeconds, nowSeconds: nowSeconds)) {
+    throw const FormatException('Invalid webhook signature');
+  }
+  final String text = rawBody is String ? rawBody : utf8.decode(rawBody as List<int>);
+  final Object? j = jsonDecode(text);
+  if (j is! Map || j['id'] is! String || j['type'] is! String) {
+    throw const FormatException('The webhook body is not a Catz Connect event');
+  }
+  final Object? d = j['data'];
+  final Map<String, dynamic> data = d is Map ? Map<String, dynamic>.from(d) : <String, dynamic>{};
+  return WebhookEvent(
+    id: j['id'] as String,
+    type: j['type'] as String,
+    createdAt: j['created_at']?.toString() ?? '',
+    organizationId: j['organization_id']?.toString() ?? '',
+    test: j['test'] == true || data['test'] == true,
+    data: data,
+  );
+}

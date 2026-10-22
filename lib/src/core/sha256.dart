@@ -1,6 +1,6 @@
 // Pure-Dart SHA-256 (FIPS 180-4) and HMAC-SHA256 (RFC 2104).
 //
-// The libsodium binding (sodium / sodium_libs) has no SHA-256 or
+// The libsodium binding (package:sodium) has no SHA-256 or
 // HMAC-SHA256 API (`crypto.auth` is HMAC-SHA512-256), and these two are only
 // used for webhook signatures and the push user_hash, which must work
 // synchronously and without loading libsodium. Checked against the FIPS

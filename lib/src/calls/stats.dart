@@ -25,6 +25,9 @@ class StatsSample {
     this.jitterMs,
     this.lossPct,
     this.bitrateKbps,
+    this.availableOutgoingKbps,
+    this.remoteLossPct,
+    this.cpuLimited = false,
   });
 
   final ConnectionType? connection;
@@ -34,6 +37,17 @@ class StatsSample {
   final double? jitterMs;
   final double? lossPct;
   final double? bitrateKbps;
+
+  /// `availableOutgoingBitrate` of the selected pair (kbps), when reported.
+  final double? availableOutgoingKbps;
+
+  /// Loss of what this side sends, from the peer's receiver reports
+  /// (`remote-inbound-rtp` fractionLost, %).
+  final double? remoteLossPct;
+
+  /// An outbound video stream is limited by CPU
+  /// (`qualityLimitationReason: cpu`).
+  final bool cpuLimited;
 
   QualityLevel get level => qualityLevel(rttMs: rttMs, lossPct: lossPct);
 }
@@ -147,6 +161,14 @@ class StatsAccumulator {
       final double? rtt = asDouble(pair['currentRoundTripTime']);
       if (rtt != null) rttMs = rtt * 1000.0;
     }
+    double? availableKbps;
+    if (pair != null) {
+      final double? aob = asDouble(pair['availableOutgoingBitrate']);
+      if (aob != null && aob >= 0) availableKbps = aob / 1000.0;
+    }
+    bool cpuLimited = false;
+    double remoteLossSum = 0;
+    int remoteLossCount = 0;
 
     double jitterSum = 0.0;
     int jitterCount = 0;
@@ -178,9 +200,16 @@ class StatsAccumulator {
           rtpBytes += b;
           sawRtpBytes = true;
         }
+        final String? kind = asString(e['kind']) ?? asString(e['mediaType']);
+        if (kind == 'video' && asString(e['qualityLimitationReason']) == 'cpu') cpuLimited = true;
       } else if (e.type == 'remote-inbound-rtp') {
         final double? r = asDouble(e['roundTripTime']);
         if (r != null) remoteRtt = r * 1000.0;
+        final double? fl = asDouble(e['fractionLost']);
+        if (fl != null && fl >= 0) {
+          remoteLossSum += fl;
+          remoteLossCount++;
+        }
       }
     }
     rttMs ??= remoteRtt;
@@ -229,6 +258,9 @@ class StatsAccumulator {
       jitterMs: jitterCount > 0 ? jitterSum / jitterCount : null,
       lossPct: lossPct,
       bitrateKbps: kbps,
+      availableOutgoingKbps: availableKbps,
+      remoteLossPct: remoteLossCount > 0 ? (remoteLossSum / remoteLossCount) * 100.0 : null,
+      cpuLimited: cpuLimited,
     );
   }
 }

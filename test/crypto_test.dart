@@ -128,7 +128,7 @@ Future<void> main() async {
         expect(r.url.toString(), s['url']);
         expect(r.headers['Authorization'], s['authorization']);
         expect(r.headers['Content-Type'], s['content_type']);
-        expect(r.headers['User-Agent'], 'catzconnect-dart-sdk/1.5.0');
+        expect(r.headers['User-Agent'], 'catzconnect-dart-sdk/$kCatzConnectVersion');
         expect(r.headers.containsKey('Accept'), isFalse);
         final Map<String, dynamic> body = jsonDecode(r.body) as Map<String, dynamic>;
         expect(body.keys.toList(), <String>['nonce', 'ciphertext']);

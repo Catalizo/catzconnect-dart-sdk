@@ -9,7 +9,7 @@
 import 'dart:convert';
 import 'dart:typed_data';
 
-import 'package:sodium_libs/sodium_libs.dart' show KeyPair, SecureKey, Sodium;
+import 'package:sodium/sodium.dart' show KeyPair, SecureKey, Sodium;
 
 import 'core/base64.dart';
 import 'core/errors.dart';

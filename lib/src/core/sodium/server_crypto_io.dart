@@ -1,41 +1,31 @@
 // The server-API crypto on Android, iOS, macOS, Linux and Windows.
 //
-// Key derivation uses the sodium_libs (package:sodium) Sumo API:
-// `crypto.scalarmult` (crypto_scalarmult, Sumo only) and `crypto.genericHash`
-// (crypto_generichash). The AEAD is crypto_aead_chacha20poly1305_ietf, which
-// package:sodium's high-level API does not wrap (`crypto.aeadChaCha20Poly1305`
-// is the ORIGINAL construction with an 8-byte nonce, not the IETF one the
-// server uses), so it is called through package:sodium's raw FFI bindings
-// (`LibSodiumFFI`, exported by `package:sodium/sodium.ffi.dart`) on the same
-// libsodium binary that sodium_libs bundles.
+// Key derivation uses package:sodium's Sumo API: `crypto.scalarmult`
+// (crypto_scalarmult, Sumo only) and `crypto.genericHash` (crypto_generichash).
+// The AEAD is crypto_aead_chacha20poly1305_ietf, which package:sodium's
+// high-level API does not wrap (`crypto.aeadChaCha20Poly1305` is the ORIGINAL
+// construction with an 8-byte nonce, not the IETF one the server uses), so it
+// is called through package:sodium's raw FFI bindings (`LibSodiumFFI`, exported
+// by `package:sodium/sodium.ffi.dart`). Since sodium 4 those bindings resolve
+// against the libsodium its build hooks bundle (native assets), the same
+// library SodiumSumoInit uses — nothing to open by hand.
 
 import 'dart:convert';
 import 'dart:ffi';
-import 'dart:io' show Platform;
 import 'dart:typed_data';
 
-// VERIFY: LibSodiumFFI is exported by package:sodium/sodium.ffi.dart in
-// sodium 3.x (constructor `LibSodiumFFI(DynamicLibrary)`).
 import 'package:sodium/sodium.ffi.dart' show LibSodiumFFI;
-import 'package:sodium_libs/sodium_libs_sumo.dart' show SecureKey, SodiumSumo, SodiumSumoInit;
+import 'package:sodium/sodium_sumo.dart' show SecureKey, SodiumSumo, SodiumSumoInit;
 
 import '../errors.dart';
 import 'crypto_backend.dart';
 
-/// Loads libsodium through sodium_libs and returns the server crypto.
+/// Loads the bundled libsodium and returns the server crypto.
 Future<ServerCrypto> loadServerCrypto() async {
+  // init() is synchronous on dart:ffi; awaiting keeps the analyzer happy with
+  // the platform-neutral FutureOr signature it resolves.
   final SodiumSumo sumo = await SodiumSumoInit.init();
-  return SodiumServerCrypto(sumo, LibSodiumFFI(openBundledLibsodium()));
-}
-
-/// The libsodium binary sodium_libs ships, opened the way its platform
-/// implementations open it (sodium_libs 3.x: SodiumAndroid → `libsodium.so`,
-/// SodiumWindows → `libsodium.dll`, iOS / macOS / Linux →
-/// `DynamicLibrary.process()`).
-DynamicLibrary openBundledLibsodium() {
-  if (Platform.isAndroid) return DynamicLibrary.open('libsodium.so');
-  if (Platform.isWindows) return DynamicLibrary.open('libsodium.dll');
-  return DynamicLibrary.process();
+  return SodiumServerCrypto(sumo, const LibSodiumFFI());
 }
 
 /// [ServerCrypto] on libsodium. [sumo] must be a Sumo instance on the same

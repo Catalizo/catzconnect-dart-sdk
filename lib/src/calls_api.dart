@@ -321,7 +321,7 @@ class CallsApi {
     final EnvValues? e = env ?? _env;
     final ResolvedKeys keys = resolveKeys(e);
     final EncryptedBody enc = await encryptPayload(body, keys);
-    final Map<String, dynamic> res = await _http.request(path, enc, e);
+    final Map<String, dynamic> res = await _http.request(path, enc, e, rebuild: () => encryptPayload(body, keys));
     return openResponse(res, keys);
   }
 

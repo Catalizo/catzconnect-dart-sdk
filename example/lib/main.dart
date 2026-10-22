@@ -1,11 +1,21 @@
 // Minimal Catz Connect call app: paste a user token (from your backend's
 // `calls.token(userId)`) and a call id (from `calls.create(...)`), join,
 // and see local + remote video. Incoming calls for this user ring here too.
+// The shield button opens the app-key page (app_key_example.dart): an OTP
+// sent straight from the app, protected by Play Integrity / App Attest.
+// Call warnings (many participants, relay unavailable, weak connection,
+// video paused, …) show as a dismissible banner (call_warnings.dart).
+// The chat button opens in-call chat (call_chat.dart); the wave button sends
+// an app-defined data message (`sendData`) the other participants log.
 
 import 'dart:async';
 
 import 'package:catzconnect/catzconnect.dart';
 import 'package:flutter/material.dart';
+
+import 'app_key_example.dart';
+import 'call_chat.dart';
+import 'call_warnings.dart';
 
 void main() => runApp(const CallExampleApp());
 
@@ -48,6 +58,19 @@ class _CallPageState extends State<CallPage> {
   bool _camMuted = false;
   IncomingCall? _ringing;
 
+  /// Warnings in effect (mirrors `client.activeWarnings`).
+  List<CallWarning> _warnings = <CallWarning>[];
+
+  /// Codes the user dismissed; a code shows again after it was cleared and
+  /// raised anew.
+  final Set<String> _dismissedWarnings = <String>{};
+
+  /// Swap for `CallWarningTexts(CallWarningTexts.german)` or your own map.
+  final CallWarningTexts _warningTexts = const CallWarningTexts();
+
+  /// In-call chat messages of the current call.
+  final CallChatLog _chat = CallChatLog();
+
   @override
   void initState() {
     super.initState();
@@ -64,6 +87,7 @@ class _CallPageState extends State<CallPage> {
     _url.dispose();
     _token.dispose();
     _callId.dispose();
+    _chat.dispose();
     super.dispose();
   }
 
@@ -132,10 +156,45 @@ class _CallPageState extends State<CallPage> {
       c.provider.listen((ProviderEvent e) =>
           _say('Call runs on ${e.provider.name}: hand off to that SDK (room ${e.provider.room})')),
       c.errors.listen((CallError e) => _say('Error ${e.code}: ${e.message}')),
+      c.warnings.listen((CallWarning w) {
+        _say('Warning ${w.code} (${w.source.name})');
+        if (!mounted) return;
+        setState(() => _warnings = c.activeWarnings);
+      }),
+      c.chatMessages.listen((CallChatMessage m) {
+        _chat.add(ChatEntry(
+          author: _nameOf(m.from, m.userId),
+          text: m.text,
+          at: m.ts,
+          private: m.isPrivate,
+          via: m.via,
+        ));
+      }),
+      c.dataMessages.listen((CallDataMessage m) {
+        final Object? p = m.payload;
+        if (p is Map && p['type'] == 'wave') _say('${_nameOf(m.from, m.userId)} waved');
+      }),
+      c.warningsCleared.listen((CallWarningCleared w) {
+        _say('Warning cleared: ${w.code}');
+        if (!mounted) return;
+        setState(() {
+          _dismissedWarnings.remove(w.code);
+          _warnings = c.activeWarnings;
+        });
+      }),
     ]);
     await c.connect();
     _say('Connected');
     return c;
+  }
+
+  String _nameOf(String pid, String userId) => userId.isNotEmpty ? userId : (_peerLabels[pid] ?? pid);
+
+  /// pid → display name of the other participants, for the chat recipient picker.
+  Map<String, String> _chatPeers() {
+    final CatzCallClient? c = _client;
+    if (c == null) return const <String, String>{};
+    return <String, String>{for (final PeerInfo p in c.peers) p.pid: _nameOf(p.pid, p.userId)};
   }
 
   Future<void> _run(Future<void> Function() action) async {
@@ -191,9 +250,12 @@ class _CallPageState extends State<CallPage> {
     }
     _remoteRenderers.clear();
     _peerLabels.clear();
+    _chat.clear();
     if (!mounted) return;
     setState(() {
       _inCall = false;
+      _warnings = <CallWarning>[];
+      _dismissedWarnings.clear();
       _micMuted = false;
       _camMuted = false;
       _localRenderer.srcObject = null;
@@ -214,12 +276,23 @@ class _CallPageState extends State<CallPage> {
   Widget build(BuildContext context) {
     final CatzCallClient? c = _client;
     return Scaffold(
-      appBar: AppBar(title: const Text('Catz Connect calls')),
+      appBar: AppBar(
+        title: const Text('Catz Connect calls'),
+        actions: <Widget>[
+          IconButton(
+            tooltip: 'App key: send an OTP',
+            icon: const Icon(Icons.verified_user_outlined),
+            onPressed: () => Navigator.of(context)
+                .push(MaterialPageRoute<void>(builder: (BuildContext context) => const AppKeyOtpPage())),
+          ),
+        ],
+      ),
       body: SafeArea(
         child: Column(
           children: <Widget>[
             if (!_inCall) _setupForm(),
             if (_ringing != null) _ringingBanner(_ringing!),
+            ..._warningBanner(),
             Expanded(child: _videoGrid()),
             if (_inCall && c != null) _controls(c),
             SizedBox(
@@ -270,6 +343,18 @@ class _CallPageState extends State<CallPage> {
         ],
       ),
     );
+  }
+
+  List<Widget> _warningBanner() {
+    final CallWarning? w = warningToShow(_warnings, _dismissedWarnings);
+    if (w == null) return const <Widget>[];
+    return <Widget>[
+      CallWarningBanner(
+        warning: w,
+        texts: _warningTexts,
+        onDismiss: () => setState(() => _dismissedWarnings.add(w.code)),
+      ),
+    ];
   }
 
   Widget _ringingBanner(IncomingCall call) {
@@ -351,6 +436,25 @@ class _CallPageState extends State<CallPage> {
             icon: const Icon(Icons.cameraswitch),
             onPressed: () => _run(() async {
               await c.switchCamera();
+            }),
+          ),
+          ListenableBuilder(
+            listenable: _chat,
+            builder: (BuildContext context, Widget? _) => IconButton.filledTonal(
+              tooltip: 'Chat',
+              icon: Badge(
+                isLabelVisible: _chat.unread > 0,
+                label: Text('${_chat.unread}'),
+                child: const Icon(Icons.chat_bubble_outline),
+              ),
+              onPressed: () => unawaited(showCallChat(context, c, _chat, _chatPeers)),
+            ),
+          ),
+          IconButton.filledTonal(
+            tooltip: 'Wave to everyone',
+            icon: const Icon(Icons.waving_hand_outlined),
+            onPressed: () => _run(() async {
+              await c.sendData(<String, dynamic>{'type': 'wave'});
             }),
           ),
           IconButton.filled(

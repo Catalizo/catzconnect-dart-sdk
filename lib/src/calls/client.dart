@@ -7,11 +7,15 @@ import 'dart:async';
 import 'package:flutter/foundation.dart' show TargetPlatform, defaultTargetPlatform, kIsWeb;
 import 'package:flutter_webrtc/flutter_webrtc.dart' show Helper, MediaStream, MediaStreamTrack, navigator;
 
+import '../core/env.dart' show checkBaseUrl;
+import '../core/errors.dart' show CatzException;
+import 'messages.dart';
 import 'models.dart';
 import 'peer.dart';
 import 'protocol.dart';
 import 'signaling.dart';
 import 'stats.dart';
+import 'warnings.dart';
 
 /// How long to wait for `joined` after `join` / `accept`.
 const Duration _joinTimeout = Duration(seconds: 15);
@@ -115,6 +119,45 @@ class _PendingJoin {
   Timer? timer;
 }
 
+/// Bandwidth estimates of a new connection are ignored for this long while
+/// they ramp up.
+const Duration _estimateWarmup = Duration(seconds: 10);
+
+/// One peer's health sample.
+typedef _Row = ({PeerSession peer, StatsSample sample});
+
+/// Average of the non-null values, or null.
+double? _avg(Iterable<double?> xs) {
+  double sum = 0;
+  int n = 0;
+  for (final double? x in xs) {
+    if (x == null) continue;
+    sum += x;
+    n++;
+  }
+  return n == 0 ? null : sum / n;
+}
+
+/// The RTCPeerConnection configuration: defaults, then [extra] (the
+/// client's `rtcConfig`), then `iceTransportPolicy: relay` when [relayOnly]
+/// (it wins over `rtcConfig`), and the [iceServers] from the server.
+Map<String, dynamic> buildRtcConfiguration({
+  required Map<String, dynamic> extra,
+  required bool relayOnly,
+  required List<IceServer> iceServers,
+}) {
+  final Map<String, dynamic> cfg = <String, dynamic>{
+    'sdpSemantics': 'unified-plan',
+    'bundlePolicy': 'max-bundle',
+    'rtcpMuxPolicy': 'require',
+    'iceTransportPolicy': 'all',
+  };
+  cfg.addAll(extra);
+  if (relayOnly) cfg['iceTransportPolicy'] = 'relay';
+  cfg['iceServers'] = iceServers.map((IceServer s) => s.toJson()).toList();
+  return cfg;
+}
+
 /// Flutter client for Catz Connect voice and video calls.
 ///
 /// ```dart
@@ -135,6 +178,20 @@ class CatzCallClient {
   /// [getToken], which is called whenever a fresh token is needed (so long
   /// calls survive token expiry and reconnects). [url] defaults to the
   /// production endpoint; use `ws_url` from `calls.token` when it differs.
+  /// It must be `wss://` (`ws://` only to localhost / 127.0.0.1 / ::1 /
+  /// 10.0.2.2, or with [allowInsecureHttp]), else an [ArgumentError].
+  ///
+  /// [relayOnly] (default false) forces `iceTransportPolicy: relay` for
+  /// every call: media only goes through the TURN relay, so the other
+  /// participants never learn this device's IP addresses. `join` /
+  /// `accept` can set it per call. It needs TURN on the server.
+  ///
+  /// [adaptiveVideo] (default true) splits the outgoing video across the
+  /// peers of a peer-to-peer call — clamp(available / peers, 150 kbps,
+  /// 1.5 Mbps) each, lower resolution as it shrinks — and pauses video under
+  /// 150 kbps per peer to keep audio clear (`video_reduced` /
+  /// `video_paused` on [warnings]). Audio is never touched. [healthInterval]
+  /// is how often the network / CPU checks behind [warnings] run.
   CatzCallClient({
     String? token,
     Future<String> Function()? getToken,
@@ -143,15 +200,45 @@ class CatzCallClient {
     this.statsInterval = const Duration(seconds: 10),
     Map<String, dynamic>? rtcConfig,
     SocketConnector? connector,
+    this.relayOnly = false,
+    bool allowInsecureHttp = false,
+    this.adaptiveVideo = true,
+    this.healthInterval = const Duration(seconds: 2),
+    this.messageTransport = MessageTransport.auto,
   })  : _token = (token == null || token.isEmpty) ? null : token,
         _getToken = getToken,
         _url = url,
+        // ignore: prefer_initializing_formals
         _connector = connector,
         _rtcExtra = rtcConfig ?? const <String, dynamic>{} {
     if ((token == null || token.isEmpty) && getToken == null) {
       throw ArgumentError('Pass a token or getToken to CatzCallClient.');
     }
+    try {
+      checkBaseUrl(url, allowInsecure: allowInsecureHttp, what: 'CatzCallClient url');
+    } on CatzException catch (e) {
+      throw ArgumentError(e.message);
+    }
   }
+
+  /// Relay-only ICE for every call (see the constructor). A `relayOnly`
+  /// passed to [join] / [accept] wins for that call.
+  final bool relayOnly;
+
+  /// Shape the outgoing video to the available bandwidth (see the constructor).
+  final bool adaptiveVideo;
+
+  /// Interval of the network / CPU checks behind client-side warnings and
+  /// adaptive video.
+  final Duration healthInterval;
+
+  /// How [sendChat] / [sendData] deliver: over WebRTC data channels when
+  /// open, else through the signaling server ([MessageTransport.auto]), or
+  /// always through the server ([MessageTransport.server]).
+  final MessageTransport messageTransport;
+
+  /// `relayOnly` of the last [join] / [accept] (kept for rejoins).
+  bool? _joinRelayOnly;
 
   final String? _token;
   final Future<String> Function()? _getToken;
@@ -180,6 +267,17 @@ class CatzCallClient {
   final StreamController<ProviderEvent> _provider = StreamController<ProviderEvent>.broadcast();
   final StreamController<CallError> _errors = StreamController<CallError>.broadcast();
   final StreamController<String> _closedCtl = StreamController<String>.broadcast();
+  final StreamController<CallWarning> _warnings = StreamController<CallWarning>.broadcast();
+  final StreamController<CallWarningCleared> _warningsCleared = StreamController<CallWarningCleared>.broadcast();
+  final StreamController<CallChatMessage> _chat = StreamController<CallChatMessage>.broadcast();
+  final StreamController<CallDataMessage> _data = StreamController<CallDataMessage>.broadcast();
+
+  /// In-call chat from other participants (your own sends are not echoed:
+  /// show them from what [sendChat] returns).
+  Stream<CallChatMessage> get chatMessages => _chat.stream;
+
+  /// App data from other participants ([sendData]).
+  Stream<CallDataMessage> get dataMessages => _data.stream;
 
   /// Someone is calling this user (sent while the call rings).
   Stream<IncomingCall> get incoming => _incoming.stream;
@@ -212,6 +310,17 @@ class CatzCallClient {
   /// Server `error` frames and local failures (media, negotiation, ...).
   Stream<CallError> get errors => _errors.stream;
 
+  /// Something may degrade the call: from the server (`large_call`,
+  /// `relay_busy`, `relay_unavailable`) or the client's own checks
+  /// (`poor_network`, `device_overloaded`, `video_reduced`,
+  /// `video_paused`); see [CallWarningCodes]. Emitted once when it starts;
+  /// [activeWarnings] lists the ones in effect.
+  Stream<CallWarning> get warnings => _warnings.stream;
+
+  /// A warning is over (also emitted for each active warning when the call
+  /// ends).
+  Stream<CallWarningCleared> get warningsCleared => _warningsCleared.stream;
+
   /// The client was closed (by [dispose], or because it cannot
   /// authenticate any more). Carries the reason.
   Stream<String> get closed => _closedCtl.stream;
@@ -222,7 +331,6 @@ class CatzCallClient {
   Future<void>? _connecting;
   bool _disposed = false;
   List<IceServer> _iceServers = <IceServer>[];
-  int _maxParticipants = 4;
   _ActiveCall? _call;
   final Map<String, PeerSession> _peers = <String, PeerSession>{};
   final Map<String, CallInfo> _ringing = <String, CallInfo>{};
@@ -238,8 +346,27 @@ class CatzCallClient {
   bool _videoMuted = false;
 
   Timer? _statsTimer;
+  Timer? _healthTimer;
+  bool _healthBusy = false;
+  final Map<String, CallWarning> _activeWarnings = <String, CallWarning>{};
+  final SustainedFlag _netFlag = SustainedFlag();
+  final SustainedFlag _cpuFlag = SustainedFlag();
+  final VideoAdapter _adapter = VideoAdapter();
   DateTime? _downAt;
   Timer? _resumeTimer;
+
+  MessageLimits _msgLimits = const MessageLimits();
+  RateBucket _sendBucket = RateBucket(const MessageLimits());
+
+  /// Per-peer rate limit on what arrives over data channels (the server
+  /// limits the relay path).
+  final Map<String, RateBucket> _recvBuckets = <String, RateBucket>{};
+
+  /// (sender pid, message id) already delivered.
+  final Dedup _seen = Dedup(2048);
+
+  /// The in-call message caps in force (from the server's `hello`).
+  MessageLimits get messageLimits => _msgLimits;
 
   /// True while the signaling socket is open.
   bool get isConnected => _sig?.isOpen ?? false;
@@ -267,6 +394,10 @@ class CatzCallClient {
   ConnectionType? connectionOf(String pid) => _peers[pid]?.connectionType;
 
   bool isMuted(MediaKind kind) => kind == MediaKind.audio ? _audioMuted : _videoMuted;
+
+  /// Warnings in effect for the current call (server and client), oldest
+  /// first.
+  List<CallWarning> get activeWarnings => List<CallWarning>.unmodifiable(_activeWarnings.values);
 
   /// ICE servers in use: the current call's (`joined` / `ice_refresh`, with
   /// TURN), else the STUN servers from the last `hello`.
@@ -329,9 +460,12 @@ class CatzCallClient {
     // hello has STUN only: a call's TURN credentials stay until `joined` /
     // `ice_refresh` renews them.
     _iceServers = hello.iceServers;
-    final int? maxP = hello.maxParticipants;
-    if (maxP != null && maxP > 0) _maxParticipants = maxP;
     if (_call?.ice == null) _applyIce();
+    if (hello.messageLimits != _msgLimits) {
+      _msgLimits = hello.messageLimits;
+      _sendBucket = RateBucket(_msgLimits);
+      _recvBuckets.clear();
+    }
     if (!reconnect) return;
 
     final DateTime? downAt = _downAt;
@@ -435,6 +569,7 @@ class CatzCallClient {
       if (call == null || m.callId != call.id) return;
       final PeerSession? s = _peers.remove(m.peer.pid);
       if (s != null) unawaited(s.close());
+      _recvBuckets.remove(m.peer.pid);
       _emit<PeerLeftEvent>(_peerLeft, PeerLeftEvent(callId: m.callId, peer: m.peer, reason: m.reason));
     } else if (m is SignalMessage) {
       final _ActiveCall? call = _call;
@@ -469,6 +604,17 @@ class CatzCallClient {
       if (m.callId != null && m.callId != call.id) return; // another call's credentials
       call.ice = m.iceServers;
       _applyIce();
+    } else if (m is UnknownMessage) {
+      final CallMessageFrame? f = CallMessageFrame.tryFrom(m);
+      if (f != null) _onRelayedMessage(f);
+    } else if (m is ErrorMessage && m.messageId != null) {
+      // A chat / data message was refused: nothing to do with joins or resumes.
+      _emitError(CallMessageError(m.error.code, m.error.message, callId: m.error.callId, messageId: m.messageId));
+    } else if (m is ErrorMessage && isUnsupportedMessageError(m.error.code, m.error.message)) {
+      // A server without in-call messages refused a chat / data frame (no
+      // id): not a join or resume failure. Stop relaying through it.
+      _msgLimits = _msgLimits.withRelay(false);
+      _emitError(CallMessageError(m.error.code, m.error.message, callId: m.error.callId));
     } else if (m is ErrorMessage) {
       final CallError err = m.error;
       final String? errCallId = err.callId;
@@ -485,6 +631,13 @@ class CatzCallClient {
       }
       if (isAuthErrorCode(err.code)) _sig?.markTokenStale();
       _emitError(err);
+    } else if (m is WarningMessage) {
+      final CallWarning? w = parseWarning(m.raw, DateTime.now(), fallbackCallId: _call?.id ?? _pendingJoin?.callId);
+      if (w != null && _isOurCall(w.callId)) _raiseWarning(w);
+    } else if (m is WarningClearedMessage) {
+      final CallWarningCleared? c =
+          parseWarningCleared(m.raw, DateTime.now(), fallbackCallId: _call?.id ?? _pendingJoin?.callId);
+      if (c != null && _isOurCall(c.callId)) _clearWarning(c.code, CallWarningSource.server);
     }
   }
 
@@ -546,12 +699,8 @@ class CatzCallClient {
         final PeerSession? s = _peers.remove(pid);
         if (s != null) unawaited(s.close());
       }
-      final int maxP = asInt(call.info.raw['max_participants']) ?? _maxParticipants;
-      final int limit = maxP - 1 < 1 ? 1 : maxP - 1;
-      int opened = 0;
+      // No participant cap here: the server decides who may join.
       for (final PeerInfo peer in peers) {
-        if (opened >= limit) break;
-        opened++;
         final PeerSession? s = _peers[peer.pid];
         if (s != null && isStalePeerEpoch(s.peer.epoch, peer.epoch)) {
           // The peer rejoined from another device while we were away.
@@ -563,13 +712,6 @@ class CatzCallClient {
         } else {
           _createPeer(peer, initiator: true);
         }
-      }
-      if (peers.length > limit) {
-        _emitError(CallError(
-          'too_many_participants',
-          'Only ${limit + 1} participants fit a peer-to-peer call.',
-          callId: call.id,
-        ));
       }
       _startStats();
       _settleJoin(pending, JoinResult(call: call.info, pid: call.pid, peers: peers));
@@ -599,21 +741,19 @@ class CatzCallClient {
     _pendingJoin = null;
     pj.timer?.cancel();
     final _ActiveCall? call = _call;
-    if (call != null && call.id == pj.callId && _peers.isEmpty) unawaited(_teardown());
+    if (call != null && call.id == pj.callId && _peers.isEmpty) {
+      unawaited(_teardown());
+    } else if (call == null) {
+      _clearAllWarnings();
+    }
     if (!pj.completer.isCompleted) pj.completer.completeError(err);
   }
 
-  Map<String, dynamic> _rtcConfiguration() {
-    final Map<String, dynamic> cfg = <String, dynamic>{
-      'sdpSemantics': 'unified-plan',
-      'bundlePolicy': 'max-bundle',
-      'rtcpMuxPolicy': 'require',
-      'iceTransportPolicy': 'all',
-    };
-    cfg.addAll(_rtcExtra);
-    cfg['iceServers'] = (_call?.ice ?? _iceServers).map((IceServer s) => s.toJson()).toList();
-    return cfg;
-  }
+  Map<String, dynamic> _rtcConfiguration() => buildRtcConfiguration(
+        extra: _rtcExtra,
+        relayOnly: _joinRelayOnly ?? relayOnly,
+        iceServers: _call?.ice ?? _iceServers,
+      );
 
   PeerSession _createPeer(PeerInfo peer, {required bool initiator}) {
     final _ActiveCall call = _call!;
@@ -653,6 +793,7 @@ class CatzCallClient {
         );
       },
       onError: (PeerSession s, CallError e) => _emitError(e),
+      onChannelMessage: (PeerSession s, String text) => _onPeerMessage(callId, s, text),
     );
     _peers[pid] = session;
 
@@ -761,6 +902,7 @@ class CatzCallClient {
     bool? audio,
     bool? video,
     MediaStream? stream,
+    bool? relayOnly,
   }) async {
     if (callId.trim().isEmpty) throw const CallError('bad_request', 'Missing call id.');
     final _ActiveCall? current = _call;
@@ -768,6 +910,7 @@ class CatzCallClient {
       throw CallError('already_in_call', 'Already in a call; leave() first.', callId: current.id);
     }
     await connect();
+    _joinRelayOnly = relayOnly;
     final CallInfo? known = _ringing[callId];
     final bool a = audio ?? true;
     final bool v = video ?? (known?.mode == CallMode.video);
@@ -788,15 +931,18 @@ class CatzCallClient {
   ///
   /// [audio] defaults to true; [video] defaults to true for a video call
   /// known from [incoming], else false. Pass [stream] to use your own media
-  /// (the client does not stop its tracks).
-  Future<JoinResult> join(String callId, {bool? audio, bool? video, MediaStream? stream}) async {
-    final ({bool audio, bool video}) media = await _prepareJoin(callId, audio: audio, video: video, stream: stream);
+  /// (the client does not stop its tracks). [relayOnly] overrides the
+  /// client's [CatzCallClient.relayOnly] for this call.
+  Future<JoinResult> join(String callId, {bool? audio, bool? video, MediaStream? stream, bool? relayOnly}) async {
+    final ({bool audio, bool video}) media =
+        await _prepareJoin(callId, audio: audio, video: video, stream: stream, relayOnly: relayOnly);
     return _sendJoin(callId, accept: false, audio: media.audio, video: media.video);
   }
 
   /// Answers an incoming call (the callee's alias of [join]).
-  Future<JoinResult> accept(String callId, {bool? audio, bool? video, MediaStream? stream}) async {
-    final ({bool audio, bool video}) media = await _prepareJoin(callId, audio: audio, video: video, stream: stream);
+  Future<JoinResult> accept(String callId, {bool? audio, bool? video, MediaStream? stream, bool? relayOnly}) async {
+    final ({bool audio, bool video}) media =
+        await _prepareJoin(callId, audio: audio, video: video, stream: stream, relayOnly: relayOnly);
     return _sendJoin(callId, accept: true, audio: media.audio, video: media.video);
   }
 
@@ -975,9 +1121,162 @@ class CatzCallClient {
     if (local != null) _emit<LocalStreamEvent>(_localStream, LocalStreamEvent(stream: local));
   }
 
+  // In-call messages -----------------------------------------------------
+
+  /// Sends a chat message to everyone in the call, or to one participant
+  /// ([to]: its pid). Goes over WebRTC data channels when they are open,
+  /// through the signaling server otherwise. Your own message is not echoed
+  /// on [chatMessages]. Throws [CallMessageError] (`not_in_call`,
+  /// `bad_request`, `message_too_large`, `rate_limited`, `no_route`); a
+  /// refusal by the server arrives on [errors] as a [CallMessageError] with
+  /// [CallMessageError.messageId].
+  Future<SentCallMessage> sendChat(String text, {String? to}) {
+    final CallMessageError? err = checkChat(text, _msgLimits);
+    if (err != null) return Future<SentCallMessage>.error(err);
+    return _sendMessage(chat: true, text: text, to: to, reliable: true);
+  }
+
+  /// Sends app-defined data (any JSON-encodable value, at most
+  /// [MessageLimits.dataMaxBytes] as JSON) to everyone or to one
+  /// participant. `reliable: false` uses the unordered channel (lower
+  /// latency, may drop; not queued while signaling reconnects). Same
+  /// delivery and errors as [sendChat].
+  Future<SentCallMessage> sendData(Object? payload, {String? to, bool reliable = true}) {
+    final ({CallMessageError? error, String json}) r = checkData(payload, _msgLimits);
+    final CallMessageError? err = r.error;
+    if (err != null) return Future<SentCallMessage>.error(err);
+    return _sendMessage(chat: false, payload: payload, to: to, reliable: reliable);
+  }
+
+  Future<SentCallMessage> _sendMessage({
+    required bool chat,
+    String? text,
+    Object? payload,
+    String? to,
+    required bool reliable,
+  }) async {
+    final _ActiveCall? call = _call;
+    if (call == null) throw const CallMessageError('not_in_call', 'Not in a call.');
+    if (to != null && (to.isEmpty || to == call.pid)) {
+      throw CallMessageError('bad_request', "`to` must be another participant's pid.", callId: call.id);
+    }
+    final DateTime now = DateTime.now();
+    if (!_sendBucket.take(now)) {
+      throw CallMessageError('rate_limited', 'Too many messages — slow down.', callId: call.id);
+    }
+    final String id = newMessageId(null, now);
+    final PeerSession? target = to == null ? null : _peers[to];
+    final List<PeerSession> sessions =
+        to == null ? _peers.values.toList() : <PeerSession>[?target];
+    final MessageRoute route = chooseRoute(
+      sessions.map((PeerSession p) => p.channelOpen(reliable: reliable)).toList(),
+      forceServer: messageTransport == MessageTransport.server || call.provider != null,
+      serverRelay: _msgLimits.relay,
+    );
+    if (route == MessageRoute.none) {
+      throw CallMessageError('no_route', 'No open data channel and the server does not relay messages.',
+          callId: call.id);
+    }
+    if (route == MessageRoute.p2p) {
+      final String env = PeerEnvelope(
+        kind: chat ? 'chat' : 'data',
+        id: id,
+        ts: now.millisecondsSinceEpoch,
+        to: to,
+        text: text,
+        payload: payload,
+        reliable: reliable,
+      ).encode();
+      int missed = 0;
+      for (final PeerSession p in sessions) {
+        if (!await p.sendOnChannel(env, reliable: reliable)) missed++;
+      }
+      if (missed == 0 || !_msgLimits.relay) {
+        if (missed == sessions.length && sessions.isNotEmpty) {
+          throw CallMessageError('no_route', 'No open data channel and the server does not relay messages.',
+              callId: call.id);
+        }
+        return SentCallMessage(id: id, ts: now, via: MessageVia.p2p, to: to);
+      }
+      // Some channel failed: the server delivers too (receivers drop the
+      // repeat by id).
+    }
+    if (!identical(_call, call)) throw CallMessageError('not_in_call', 'The call ended.', callId: call.id);
+    _send(chat
+        ? ClientMessage.chat(call.id, id, text ?? '', to: to)
+        : ClientMessage.data(call.id, id, payload, to: to, reliable: reliable));
+    return SentCallMessage(id: id, ts: now, via: MessageVia.relay, to: to);
+  }
+
+  void _onRelayedMessage(CallMessageFrame m) {
+    final _ActiveCall? call = _call;
+    if (call == null || m.callId != call.id || !isValidMessageId(m.id) || m.from.isEmpty) return;
+    final String? text = m.text;
+    if (m.isChat && text == null) return;
+    if (_seen.seen('${m.from}|${m.id}')) return;
+    final DateTime ts = messageTime(m.ts);
+    final String userId = m.userId.isNotEmpty ? m.userId : (_peers[m.from]?.peer.userId ?? '');
+    if (m.isChat) {
+      _emit<CallChatMessage>(
+        _chat,
+        CallChatMessage(
+            callId: call.id, id: m.id, from: m.from, userId: userId, text: text!, to: m.to, ts: ts, via: MessageVia.relay),
+      );
+    } else {
+      _emit<CallDataMessage>(
+        _data,
+        CallDataMessage(
+            callId: call.id,
+            id: m.id,
+            from: m.from,
+            userId: userId,
+            payload: m.payload,
+            to: m.to,
+            ts: ts,
+            via: MessageVia.relay),
+      );
+    }
+  }
+
+  void _onPeerMessage(String callId, PeerSession s, String raw) {
+    final _ActiveCall? call = _call;
+    if (call == null || call.id != callId || !identical(_peers[s.pid], s)) return;
+    final PeerEnvelope? e = PeerEnvelope.decode(raw, _msgLimits);
+    if (e == null) return;
+    final String? myPid = call.pid;
+    if (e.to != null && myPid != null && e.to != myPid) return; // not for us
+    final RateBucket bucket = _recvBuckets.putIfAbsent(s.pid, () => RateBucket(_msgLimits));
+    if (!bucket.take()) return; // a flooding peer
+    if (_seen.seen('${s.pid}|${e.id}')) return;
+    final DateTime ts = messageTime(e.ts);
+    if (e.kind == 'chat') {
+      _emit<CallChatMessage>(
+        _chat,
+        CallChatMessage(
+            callId: callId, id: e.id, from: s.pid, userId: s.peer.userId, text: e.text ?? '', to: e.to, ts: ts, via: MessageVia.p2p),
+      );
+    } else {
+      _emit<CallDataMessage>(
+        _data,
+        CallDataMessage(
+            callId: callId,
+            id: e.id,
+            from: s.pid,
+            userId: s.peer.userId,
+            payload: e.payload,
+            to: e.to,
+            ts: ts,
+            via: MessageVia.p2p),
+      );
+    }
+  }
+
   // Stats ----------------------------------------------------------------
 
   void _startStats() {
+    _healthTimer ??= Timer.periodic(healthInterval, (Timer t) {
+      unawaited(checkHealth());
+    });
     if (_statsTimer != null) return;
     _statsTimer = Timer.periodic(statsInterval, (Timer t) {
       unawaited(collectStats());
@@ -1022,15 +1321,141 @@ class CatzCallClient {
     ));
   }
 
+  // Warnings -------------------------------------------------------------
+
+  bool _isOurCall(String callId) => callId == _call?.id || callId == _pendingJoin?.callId;
+
+  /// Adds or updates an active warning; emits on [warnings] when it is new
+  /// (or its participant count / text changed).
+  void _raiseWarning(CallWarning w) {
+    final CallWarning? prev = _activeWarnings[w.code];
+    if (prev != null && prev.participants == w.participants && prev.message == w.message) return;
+    _activeWarnings[w.code] = prev == null ? w : w.copyWith(at: prev.at);
+    _emit<CallWarning>(_warnings, w);
+  }
+
+  void _clientWarning(String code) {
+    final _ActiveCall? call = _call;
+    if (call == null) return;
+    _raiseWarning(CallWarning(
+      code: code,
+      message: defaultWarningMessage(code),
+      callId: call.id,
+      participants: _peers.length + 1,
+      source: CallWarningSource.client,
+      severity: warningSeverity(code),
+      at: DateTime.now(),
+    ));
+  }
+
+  void _clearWarning(String code, CallWarningSource source) {
+    final CallWarning? w = _activeWarnings.remove(code);
+    if (w == null) return;
+    _emit<CallWarningCleared>(
+      _warningsCleared,
+      CallWarningCleared(code: code, callId: w.callId, source: source, at: DateTime.now()),
+    );
+  }
+
+  void _clearAllWarnings() {
+    for (final CallWarning w in _activeWarnings.values.toList()) {
+      _clearWarning(w.code, w.source);
+    }
+  }
+
+  /// The ~2 s check behind client-side warnings and adaptive video: samples
+  /// every peer, raises / clears `poor_network` and `device_overloaded`
+  /// (with hysteresis), and shapes the outgoing video. Runs every
+  /// [healthInterval]; exposed for tests.
+  Future<void> checkHealth() async {
+    final _ActiveCall? call = _call;
+    if (call == null || call.provider != null || _healthBusy) return;
+    _healthBusy = true;
+    try {
+      final List<PeerSession> sessions = _peers.values.toList();
+      final List<_Row> usable = <_Row>[];
+      for (final PeerSession p in sessions) {
+        final StatsSample? s = await p.sampleStats(health: true);
+        if (s != null && s.connection != null) usable.add((peer: p, sample: s));
+      }
+      if (!identical(_call, call) || usable.isEmpty) return;
+      final DateTime now = DateTime.now();
+      // Averages over the peers: a weak uplink shows on every connection,
+      // one bad peer does not.
+      final double? lossPct = _avg(usable.map((_Row r) {
+        final double? a = r.sample.lossPct;
+        final double? b = r.sample.remoteLossPct;
+        if (a == null) return b;
+        if (b == null) return a;
+        return a > b ? a : b;
+      }));
+      final double? rttMs = _avg(usable.map((_Row r) => r.sample.rttMs));
+      final double? meanAvail = _avg(usable.where((_Row r) {
+        final DateTime? first = r.peer.firstPathAt;
+        return r.sample.availableOutgoingKbps != null && first != null && now.difference(first) >= _estimateWarmup;
+      }).map((_Row r) => r.sample.availableOutgoingKbps));
+      final int peers = sessions.length;
+      final double? availableKbps = meanAvail == null ? null : meanAvail * peers;
+      final bool video = sessions.any((PeerSession p) => p.sendsVideo);
+
+      final FlagChange? net = _netFlag.update(
+        networkBad(
+          availableKbps: availableKbps,
+          neededKbps: requiredKbps(peers, sendingVideo: video && !(adaptiveVideo && _adapter.paused)),
+          lossPct: lossPct,
+          rttMs: rttMs,
+          active: _netFlag.active,
+        ),
+        now,
+      );
+      if (net == FlagChange.enter) _clientWarning(CallWarningCodes.poorNetwork);
+      if (net == FlagChange.exit) _clearWarning(CallWarningCodes.poorNetwork, CallWarningSource.client);
+
+      final FlagChange? cpu =
+          _cpuFlag.update(usable.any((_Row r) => r.sample.cpuLimited), now);
+      if (cpu == FlagChange.enter) _clientWarning(CallWarningCodes.deviceOverloaded);
+      if (cpu == FlagChange.exit) _clearWarning(CallWarningCodes.deviceOverloaded, CallWarningSource.client);
+
+      if (!adaptiveVideo || !video) return;
+      final List<AdaptChange> changes =
+          _adapter.update(now: now, peers: peers, availableKbps: availableKbps, lossPct: lossPct, rttMs: rttMs);
+      final VideoTarget target = videoTarget(_adapter.level, peers);
+      for (final PeerSession p in sessions) {
+        await p.applyVideo(target);
+      }
+      if (!identical(_call, call)) return;
+      for (final AdaptChange c in changes) {
+        switch (c) {
+          case AdaptChange.reduced:
+            _clientWarning(CallWarningCodes.videoReduced);
+          case AdaptChange.restored:
+            _clearWarning(CallWarningCodes.videoReduced, CallWarningSource.client);
+          case AdaptChange.paused:
+            _clientWarning(CallWarningCodes.videoPaused);
+          case AdaptChange.resumed:
+            _clearWarning(CallWarningCodes.videoPaused, CallWarningSource.client);
+        }
+      }
+    } finally {
+      _healthBusy = false;
+    }
+  }
+
   // Teardown -------------------------------------------------------------
 
   Future<void> _teardown() async {
     // Take and clear all call state synchronously, so a second teardown
     // running concurrently finds nothing left to release.
     final _ActiveCall? call = _call;
+    _clearAllWarnings();
     _call = null;
     _statsTimer?.cancel();
     _statsTimer = null;
+    _healthTimer?.cancel();
+    _healthTimer = null;
+    _netFlag.reset();
+    _cpuFlag.reset();
+    _adapter.reset();
     _resumeTimer?.cancel();
     _resumeTimer = null;
     _deferred.clear();
@@ -1040,6 +1465,8 @@ class CatzCallClient {
     }
     final List<PeerSession> sessions = _peers.values.toList();
     _peers.clear();
+    _recvBuckets.clear();
+    _seen.clear();
     final MediaStreamTrack? screenTrack = _screenTrack;
     final MediaStream? screen = _screenStream;
     _screenTrack = null;
@@ -1103,6 +1530,10 @@ class CatzCallClient {
       _reconnected,
       _provider,
       _errors,
+      _warnings,
+      _warningsCleared,
+      _chat,
+      _data,
       _closedCtl,
     ]) {
       await c.close();
